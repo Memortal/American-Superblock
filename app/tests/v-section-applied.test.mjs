@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {mapV} from '../public/v-applied.js';
+import {profileAt,loftSection} from '../public/loft-geometry.js';
+const fields=new Map([['B1',[{a:[0,0],u:[1,0],n:[0,1],start:0,end:200,depth:65,co:29,ci:36,mid:32.5}]]]),s={runPerStorey:2,stepFloors:2,transition:25};
+assert.deepEqual(mapV(fields,'B1',[100,0],0,s),[100,0]);
+assert.deepEqual(mapV(fields,'B1',[100,0],12,s),[100,-2]);
+assert.deepEqual(mapV(fields,'B1',[100,65],12,s),[100,67]);
+assert.deepEqual(mapV(fields,'B1',[0,0],168,s),[0,0]);
+assert.deepEqual(mapV(fields,'B1',[200,65],168,s),[200,65]);
+assert.deepEqual(mapV(fields,'B1',[100,29],23,s,'architecture',1),[100,29]);
+assert.deepEqual(mapV(fields,'B1',[100,29],24,s,'architecture',2),[100,25]);
+assert.deepEqual(mapV(fields,'CORE',[100,0],168,s),[100,0]);
+const p={polygon:[[0,0],[4,0],[4,4],[0,4]],topPolygon:[[2,0],[6,0],[6,4],[2,4]],z:0,height:12,holes:[]};
+assert.deepEqual(profileAt(p,6).polygon,[[1,0],[5,0],[5,4],[1,4]]);
+const loops=loftSection(p,[1,0],[0,1],2);assert.equal(loops.length,1);assert.equal(Math.max(...loops[0].map(q=>q[0])),6);assert.equal(Math.min(...loops[0].map(q=>q[1])),0);assert.equal(Math.max(...loops[0].map(q=>q[1])),12);
+console.log('PASS: opposed V slopes, zero ground movement, fixed corner connections, two-floor steps, retained parking core, interpolated plan cuts and sloped section polygons');

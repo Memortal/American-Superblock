@@ -1,0 +1,59 @@
+# MEMO Geometry Engine — implementation and deployment boundary
+
+## Implemented
+
+The existing Superblock supplies live element data. `geometry-contract.js` captures actual profiles, holes, elevations, element classifications and placements without replacing them with boxes. Source IDs are retained. Geometry, placement and metadata are hashed separately. Revisions distinguish generated, modified, moved, metadata-only, reused and removed elements. Shape definitions are shared across translations. Legacy coordinate/index-derived source identities are explicitly reported rather than asserted to be topology-stable.
+
+The Geometry Engine workspace is inside the existing model. It offers building/level scopes, search and inspection, change/validation colors, capture cancellation, technical report export, editable descriptor JSON and a binary GLB derivative. GLB is tessellated from existing parametric profiles, **not from NVIDIA BRep**. Omitted unsupported elements are listed in GLB extras. Optional adapters capture generated structural members, MEP routes/equipment and actual site/landscape render meshes. Context batches lack individual BIM identities and remain approximated.
+
+Gereh ornament and its design workspace are disabled. Plain entrance airlocks, doors, canopies, structure and landscape remain. The original Phase 1 files are retained as an archived prototype, not evidence of full-site native conversion.
+
+The Python service implements authenticated jobs in isolated processes, a four-job queue, one active worker, cancellation, a 30-minute job limit, private artifact downloads, atomic caches, restart recovery and per-element failure reporting. Supported native operations are planar profile sweeps, planar holes by subtraction, and planar sloped-base sweeps. Nonplanar bases, curved MEP sweeps, STEP conversion and render meshes are unresolved rather than boxed.
+
+Native cache entries require closed-manifold and USD export/reimport checks. USD composition uses named building/category/level hierarchies, shared definitions, instance references and source-ID attributes; a flattened binary stage is intended for portable download. IFC4x3 code uses IfcOpenShell entities, building/storey containment, deterministic GUIDs, materials, property sets and faceted BRep profiles. Unknown geometry keeps its classified element and an unresolved report. Native mass-property checks, full kernel AssertValid, native tessellation, complete IFC geometry reimport checks and independent CAD verification are **not implemented/verified**.
+
+## Exact deployment blocker
+
+The editing sandbox has Python 3.12.10 but no `usd_brep`, `pxr`, `ifcopenshell`, OpenCASCADE/OCP, Docker, or native container host. The website currently runs on a Cloudflare Worker; its manifest provisions no container, persistent geometry storage, or geometry-service endpoint. Node build dependencies (`tsc`, `vite`) are also absent locally. No runtime or package was installed, and no unsupported infrastructure was invented.
+
+The Dockerfile deliberately has **no default image and no package-fetch commands**. It requires an existing, host-provisioned `GEOMETRY_RUNTIME_IMAGE` containing the compatible native libraries. It has not been built or container-tested here because Docker and that image are absent. HTTP/service and pure geometry tests run directly in the available Python runtime; native/IfcOpenShell tests are skipped explicitly.
+
+A supported native host must supply:
+
+- CPython 3.12 and NVIDIA `usd-brep` compatible with the existing Phase 1 API (1.0.1 baseline).
+- A compatible OpenUSD Python runtime. NVIDIA documents testing `usd-core` 26.8 alongside its bundled runtime and warns against separately loading 25.11.
+- IfcOpenShell with IFC4X3_ADD2 support; OpenCASCADE conversion infrastructure is additionally needed to implement STEP.
+- Durable private `/data` storage writable by UID 10001; HTTPS ingress; process isolation, memory limits and monitoring.
+- `GEOMETRY_SERVICE_TOKEN` (minimum 32 characters), `GEOMETRY_STORAGE=/data`, `GEOMETRY_BIND=0.0.0.0` and `PORT=8090`.
+
+Website settings must then contain `GEOMETRY_SERVICE_URL`, `GEOMETRY_SERVICE_TOKEN`, and a separate `GEOMETRY_EDITOR_TOKEN`. Do not put secrets in code or chat. The editor enters its access token in the workspace for the current session only. The gateway validates it before forwarding requests; the backend service token stays server-side. All jobs belong to this private editor, not a multi-tenant public account system.
+
+## API
+
+The browser uses `/api/native` as a same-origin gateway. The native service exposes:
+
+- `GET /geometry/capabilities`
+- `POST /geometry/generate`, `/geometry/update`, `/geometry/validate`
+- `POST /export/usd`, `/export/ifc`, `/export/step` (STEP explicitly returns 422)
+- `GET /geometry/status/{job_id}`
+- `GET /geometry/manifest/{job_id}` (job-addressed, not revision-addressed)
+- `POST /geometry/cancel/{job_id}`
+- `GET /geometry/artifact/{job_id}/{superblock.usdc|superblock.ifc|manifest.json}`
+
+All native endpoints require bearer authentication. Request body: `{schema, revision, format, elements}` using the downloaded descriptor contract. Maximum request 64 MiB; maximum elements 100,000. Large full-site captures must be submitted by building/level until a streaming/batched upload protocol exists. Capability failure returns 503, never a fabricated native export. Job manifests retain unresolved IDs and errors.
+
+## Verification
+
+Run from the project root:
+
+```
+node app/tests/geometry/contract.mjs
+python3 app/tools/geometry_service/test_engine.py
+python3 app/tools/geometry_service/test_service.py
+```
+
+Native integration tests only run when the real libraries are installed. Native validated counts, native timings and native output sizes must remain zero/null until those tests and actual production jobs succeed. Geometry validity is separate from code compliance.
+
+## Remaining acceptance gaps
+
+This is an integrated, testable foundation with a blocked native deployment, not fulfillment of all full-building BRep acceptance criteria. The existing architectural generator still rebuilds the building on design changes; only descriptor comparison and the native cache infrastructure are incremental. Native tessellation/LOD, complete MEP solid adapters, STEP, robust topology identity across layout changes, exact clashes, complete IFC mappings and full export/reimport metrics remain outstanding. The frontend must not claim otherwise.

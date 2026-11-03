@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict';
+import {buildRegistry,editType,stableGuid,registryCSV} from '../public/bim-registry.js';
+const wall=id=>({id,type:'IFCWALL',solidSide:true,building:'B1',level:0,parts:[{polygon:[[0,0],[10,0],[10,.5],[0,.5]],z:0,height:10}]});
+const state={types:{},assignments:{},history:[]},elements=[wall('a'),wall('b')];let r=buildRegistry(elements,state);
+assert.equal(r.rows.length,2);assert.equal(r.types.size,1);assert.equal(r.rows[0].volumeFt3,50);assert.equal(r.rows[0].family,'WT-DEM');assert.equal(r.issues.length,0);assert.match(stableGuid('a'),/^[0-3][0-9A-Za-z_$]{21}$/);
+const id=r.rows[0].typeId;assert.equal(editType(state,r,id,{label:'Shared wall',finish:'White'}).length,2);r=buildRegistry(elements,state);assert(r.rows.every(x=>x.typeLabel==='Shared wall'));assert.equal(r.rows[0].guid,stableGuid('a'));assert.equal(state.history[0].affected.length,2);assert.throws(()=>editType(state,r,id,{width:3}));assert(registryCSV(r.rows).includes('Shared wall'));assert.equal(buildRegistry([wall('a'),wall('a')]).issues.length,1);console.log('PASS: stable identities, model quantities, shared types, metadata propagation, edit guards, CSV and duplicate detection');

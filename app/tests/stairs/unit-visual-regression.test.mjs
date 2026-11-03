@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const html=readFileSync(new URL('../../public/superblock.html',import.meta.url),'utf8');
+const source=html;
+assert.match(source,/chooseCornerStair\(poly,p\.carve\?\.entry\)/,'corner-first stair positioning required');
+assert.doesNotMatch(source,/addSection\(p,l,'IFCWALL','window-sill-pans'/,'no projecting sill-band geometry');
+assert.match(source,/p\.upperSlabPolygon=p\.upperPolygon\.map\(q=>q\.slice\(\)\)/,'upper slab edges align to inset enclosure');
+assert.match(source,/p\.upperCuts=\[\]/,'upper walls have no horizontal cuts');
+assert.match(source,/p\.carve\.horizontalCuts=\[\]/,'lower walls have no horizontal cuts');
+console.log('PASS removed sill bands and horizontal cuts; aligned upper slab and corner-first stair');

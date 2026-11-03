@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {context,generate,simulate,evolve,elements,valid} from '../../public/evolution-engine.js';
+const file=process.argv[2];
+if(!file)throw Error('Pass an actual model snapshot JSON; test does not fabricate a Superblock.');
+const model=JSON.parse(fs.readFileSync(file)),c=context(model),source=JSON.stringify(c.piece),base=generate(c),s=simulate(c,base);
+assert.equal(s.agents.length,20);assert.equal(new Set(s.agents.map(a=>a.routine)).size,3);
+assert(s.valid,s.errors.join(';'));assert.equal(s.circulation,100);assert(s.entranceConnected);
+assert(s.agents.every(a=>a.path.length>100&&a.path.every(p=>p.every(Number.isFinite))));
+assert(base.stairs.every(x=>x.riserFt<=7/12&&x.treadFt>=10/12&&x.clearWidthFt>=3));
+for(const st of base.stairs){assert(Math.abs(st.path.at(-1)[2]-st.path[0][2]-12)<.001);}
+assert(base.floors.every(f=>f.holes.length===1));assert.equal(base.rooms.length,9);
+assert.equal(new Set(elements(c,base).map(e=>e.id)).size,elements(c,base).length);
+const e=await evolve(c,base.params);assert.equal(e.evaluations,18);assert.equal(e.history.length,4);
+assert(e.best.result.valid);assert(e.best.result.score>s.score);assert.notDeepEqual(e.best.geometry.params,base.params);
+assert.deepEqual(e.best.geometry.objects.map(o=>o.id),base.objects.map(o=>o.id).concat(e.best.geometry.objects.filter(o=>!base.objects.some(b=>b.id===o.id)).map(o=>o.id)).sort((a,b)=>e.best.geometry.objects.findIndex(o=>o.id===a)-e.best.geometry.objects.findIndex(o=>o.id===b)));
+assert.equal(JSON.stringify(c.piece),source);assert(simulate(c,base).cached);
+assert.equal(valid(generate(c,{furniture:100})).valid,false);
+assert.equal(simulate(c,generate(c,{furniture:100})).valid,false);
+console.log(JSON.stringify({unit:c.id,agents:s.agents.length,routines:3,routeCompletion:s.circulation,arrival:s.entranceConnected,baselineScore:s.score,bestScore:e.best.result.score,privacy:[s.privacy,e.best.result.privacy],evaluations:18,generations:3,sourceUnchanged:true,cached:simulate(c,base).cached}));

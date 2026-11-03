@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {chooseCornerStair} from '../../public/stair-corner.js';
+const rectangle=[[0,0],[29,0],[29,34],[0,34]];
+const r=chooseCornerStair(rectangle,[15,0]);
+assert.ok(r,'Stair must fit');assert.equal(r.placement,'corner');assert.ok(r.cornerDistanceFt<4,'Stair is anchored to a corner');
+const narrow=[[0,0],[7,0],[7,15],[0,15]];assert.equal(chooseCornerStair(narrow),null,'Stair cannot be forced into narrow invalid unit');
+const rotated=rectangle.map(([x,y])=>[(x-y)*.70710678+65,(x+y)*.70710678-40]);
+const rr=chooseCornerStair(rotated);assert.ok(rr&&rr.cornerDistanceFt<4,'Rotation invariant corner placement');
+const noOverlap=(a,b)=>Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1]);
+assert.ok(noOverlap(r.origin,rectangle[0])>.5,'Stair retains perimeter clearance');
+console.log('PASS corner-position stair fit, rotation, perimeter clearance and failure-safe narrow plan');

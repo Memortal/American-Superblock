@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {applyEnvelopeDetail,ASSEMBLY,envelopeDetailSheet} from '../public/envelope-detail.js';
+const poly=[[0,0],[30,0],[30,20],[0,20]],p={id:'test',building:'B1',kind:'outer-wing',levels:3,upperStart:4,groundPolygon:poly,designPolygon:poly,polygon:poly},b={id:'B1',outer:poly,courtyard:poly};
+const part=(a,c,z,h)=>({polygon:[[a,0],[c,0],[c,.5],[a,.5]],z,height:h,holes:[]});
+const es=[{id:'wall',piece:p,building:'B1',level:0,facade:true,wall:true,parts:[part(0,5,1,9),part(25,30,1,9)]},{id:'window',piece:p,building:'B1',level:0,facade:true,glazing:true,parts:[part(5,25,1,8.9)]}];
+const r=applyEnvelopeDetail(es,[p],[b],{profiles:[]});assert.equal(r.opaquePanels,2);assert.equal(r.bands,0);
+assert.equal(es.filter(e=>e.role?.includes('cornice')).length,0,'Decorative horizontal cornice band removed from all units');
+assert.equal(ASSEMBLY.cavity,.125);assert.ok(es.filter(e=>e.envelopeDetail).every(e=>e.type==='IFCWALL'&&e.facade));
+const n=es.length,parts=r.parts;const second=applyEnvelopeDetail(es,[p],[b],{profiles:[]});assert.equal(es.length,n);assert.equal(second.parts,parts,'Detail generation must not accumulate duplicates');
+assert.match(envelopeDetailSheet(r).svg,/A501/);console.log('PASS envelope assembly, opening clearance, idempotence and detail sheet');

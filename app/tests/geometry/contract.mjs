@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {captureModel,normalizeElement,validatePart} from '../../public/geometry-contract.js';
+const part={polygon:[[0,0],[10,0],[10,1],[0,1]],holes:[],z:0,height:9};
+const e={id:'B1-wall-a',building:'B1',level:0,type:'IFCWALL',parts:[part],color:0xffffff};
+const model={elements:[e],buildings:[{id:'B1',levels:8}]};
+const cold=await captureModel(model),warm=await captureModel(model,cold);
+assert.equal(warm.changes.reused.length,1);assert.equal(warm.coverage.convertedValidated,0);
+assert.ok(Math.abs(cold.elements[0].analyticVolumeM3-90*.3048**3)<1e-8);
+const moved=structuredClone(model);moved.elements[0].parts[0].polygon=part.polygon.map(p=>[p[0]+30,p[1]+15]);
+const motion=await captureModel(moved,cold);assert.equal(motion.changes.moved.length,1);assert.equal(motion.elements[0].geometryHash,cold.elements[0].geometryHash);
+const metadata=structuredClone(model);metadata.elements[0].role='New label';assert.equal((await captureModel(metadata,cold)).changes.metadataOnly.length,1);
+const altered=structuredClone(model);altered.elements[0].parts[0].height=12;assert.equal((await captureModel(altered,cold)).changes.modified.length,1);
+assert.equal((await captureModel({...model,elements:[]},cold)).changes.removed.length,1);
+await assert.rejects(()=>captureModel({...model,elements:[e,e]}),/Duplicate/);
+assert.ok(validatePart({...part,height:-1}).length);assert.ok(validatePart({...part,polygon:[[0,0],[2,2],[0,2],[2,0]]}).length);
+console.log(JSON.stringify({passed:10,coldMs:cold.metrics.captureMs,warmMs:warm.metrics.captureMs,nativeValidated:0}));
