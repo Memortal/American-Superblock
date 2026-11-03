@@ -7,7 +7,7 @@ import shutil
 ROOT = Path(__file__).resolve().parents[1]
 
 def build(base):
-    base = '/' + base.strip('/') + '/' if base.strip('/') else '/'
+    base = ('/' + base.strip('/') + '/' if base.strip('/') else '/') if base is not None else None
     source, target = ROOT / 'app/public', ROOT / 'docs'
     target.mkdir(exist_ok=True)
     # Only rewrite root URLs that identify existing bundled resources.
@@ -21,7 +21,8 @@ def build(base):
         dest.parent.mkdir(parents=True, exist_ok=True)
         if src.suffix in {'.html', '.js', '.css', '.json'}:
             text = src.read_text()
-            text = pattern.sub(lambda m: m['quote'] + base + m['name'], text)
+            prefix = base if base is not None else ('../' * len(src.relative_to(source).parent.parts) or './')
+            text = pattern.sub(lambda m: m['quote'] + prefix + m['name'], text)
             if src.name == 'geometry-workspace.js':
                 text = text.replace("async function api(path,body){", "async function api(path,body){throw new Error('Native geometry jobs require the optional local backend; GitHub Pages serves the browser tools and bundled downloads.');")
             dest.write_text(text)
@@ -35,5 +36,5 @@ def build(base):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--base', default='/American-Superblock/')
+    parser.add_argument('--base', default=None)
     build(parser.parse_args().base)

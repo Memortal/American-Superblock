@@ -73,7 +73,7 @@ summary{font-size:12px;font-weight:600;cursor:pointer}.report-footer{font-size:9
 .program-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.program-card{border:1px solid #e3e6df;border-top:3px solid var(--program);border-radius:4px;padding:15px 12px}.program-count{font-size:32px;line-height:1.1;font-weight:500}.program-count span{display:block;font-size:11px;line-height:1.4;min-height:32px;margin:8px 0 16px}.program-sf{font-size:18px;font-variant-numeric:tabular-nums}.program-sf small{font-size:8px;color:#72796f}.program-card p{font-size:10px;color:#677065;margin:7px 0 14px}.program-card>small{font-size:9px;line-height:1.5;color:#7b8379;display:block}
 .program-card{background:#fff!important;border-top-color:#111!important}.program-key i{background:#fff!important;border:1px solid #333}.section-story>div,.section-story .valley-band{background:#f7f7f7}.metric-card,.metric-card.box{background:#fff;border-top-color:#111}.legend .dot{background:#fff!important;border:1px solid #555}.wordmark i{background:#111}.program-key span:last-child i{background:#111!important}
 </style>
-<link rel="stylesheet" href="/American-Superblock/ui-layout.css"/><link rel="stylesheet" href="/American-Superblock/presentation-lab.css"/>
+<link rel="stylesheet" href="./ui-layout.css"/><link rel="stylesheet" href="./presentation-lab.css"/>
 </head>
 <body>
 <div id="scene"></div>
@@ -177,43 +177,43 @@ summary{font-size:12px;font-weight:600;cursor:pointer}.report-footer{font-size:9
 <script type="importmap">
 {
   "imports":{
-    "three":"/American-Superblock/vendor/three.module.js",
-    "three/addons/":"/American-Superblock/vendor/addons/"
+    "three":"./vendor/three.module.js",
+    "three/addons/":"./vendor/addons/"
   }
 }
 </script>
-<script src="/American-Superblock/vendor/polygon-clipping.umd.min.js"></script>
+<script src="./vendor/polygon-clipping.umd.min.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import {applyEnvelopeDetail} from '/American-Superblock/envelope-detail.js';
-import {applyDaylightFacades} from '/American-Superblock/daylight-facades.js';
-import {classifyUnitEdges,facadeOpenings,FACADE_RULE_VERSION} from '/American-Superblock/facade-opening-rules.js';
+import {applyEnvelopeDetail} from './envelope-detail.js';
+import {applyDaylightFacades} from './daylight-facades.js';
+import {classifyUnitEdges,facadeOpenings,FACADE_RULE_VERSION} from './facade-opening-rules.js';
 // Solar articulation is paused: use the grid-aligned source geometry in every view.
 const daylightSettings=Object.freeze({enabled:false,maxAngle:0,maxDepth:0});
-import {sharedBoundary,edgeIsShared,addSharedWalls,addRingStairs} from '/American-Superblock/ring-refinement.js';
-import {batchElements,elementFromHit} from '/American-Superblock/render-batches.js';
+import {sharedBoundary,edgeIsShared,addSharedWalls,addRingStairs} from './ring-refinement.js';
+import {batchElements,elementFromHit} from './render-batches.js';
 window.memoElementFromHit=elementFromHit;
-import {prepareOffices,buildOffices,parkingAccess,officeLabels} from '/American-Superblock/office-corners.js';
-import {openCornerStairs,connectCoreLandings,connectEntryThresholds} from '/American-Superblock/egress-connections.js';
-import {mountGeometryEngine} from '/American-Superblock/geometry-workspace.js';
-import {buildDoorAssemblies} from '/American-Superblock/door-assemblies.js';
-import {enforceUnitEnclosures} from '/American-Superblock/unit-enclosure.js';
-import {circle,buildCircularCore,connectCircularCore} from '/American-Superblock/circular-core.js';
-import {fitChamferCores,addVisibleFrame} from '/American-Superblock/corner-frame.js';
-import {applyVToModel} from '/American-Superblock/v-applied.js';
-import {loftMesh,loftPositions,loftSection} from '/American-Superblock/loft-geometry.js';
+import {prepareOffices,buildOffices,parkingAccess,officeLabels} from './office-corners.js';
+import {openCornerStairs,connectCoreLandings,connectEntryThresholds} from './egress-connections.js';
+import {mountGeometryEngine} from './geometry-workspace.js';
+import {buildDoorAssemblies} from './door-assemblies.js';
+import {enforceUnitEnclosures} from './unit-enclosure.js';
+import {circle,buildCircularCore,connectCircularCore} from './circular-core.js';
+import {fitChamferCores,addVisibleFrame} from './corner-frame.js';
+import {applyVToModel} from './v-applied.js';
+import {loftMesh,loftPositions,loftSection} from './loft-geometry.js';
 const vSettings={enabled:true,runPerStorey:2,stepFloors:2,transition:25};
-import {applyParkingDuplexSection} from '/American-Superblock/parking-duplex-section.js';
-import {buildRegistry} from '/American-Superblock/bim-registry.js';
-import {mountBimWorkspace} from '/American-Superblock/bim-workspace.js';
-import {applySpecs} from '/American-Superblock/specs-engine.js';
-import {mountSpecsWorkspace} from '/American-Superblock/specs-workspace.js';
-const specsCatalog=await fetch('/American-Superblock/specs-catalog.json').then(r=>{if(!r.ok)throw Error('Specs catalog unavailable');return r.json()}).catch(e=>{console.warn('MEMO specifications library unavailable; architecture remains usable.',e);return {products:[],requirements:[],propertyMap:[],designGaps:[]};});
-import {chooseCornerStair} from '/American-Superblock/stair-corner.js';
-import {mountModelControls,detailLevel} from '/American-Superblock/model-controls.js';
-import {createGerehLayer,createGerehIfcProxies,mountGerehWorkspace} from '/American-Superblock/gereh-entrances.js';
-import {createResidentialPrivacyBuffers} from '/American-Superblock/privacy-protection.js';
+import {applyParkingDuplexSection} from './parking-duplex-section.js';
+import {buildRegistry} from './bim-registry.js';
+import {mountBimWorkspace} from './bim-workspace.js';
+import {applySpecs} from './specs-engine.js';
+import {mountSpecsWorkspace} from './specs-workspace.js';
+const specsCatalog=await fetch('./specs-catalog.json').then(r=>{if(!r.ok)throw Error('Specs catalog unavailable');return r.json()}).catch(e=>{console.warn('MEMO specifications library unavailable; architecture remains usable.',e);return {products:[],requirements:[],propertyMap:[],designGaps:[]};});
+import {chooseCornerStair} from './stair-corner.js';
+import {mountModelControls,detailLevel} from './model-controls.js';
+import {createGerehLayer,createGerehIfcProxies,mountGerehWorkspace} from './gereh-entrances.js';
+import {createResidentialPrivacyBuffers} from './privacy-protection.js';
 
 const SITE=660, HALF=SITE/2, DONUT_DEPTH=65, COURTYARD_SHIFT=10, LEVEL_HEIGHT=12, BAR_STORIES=3, BAR_HEIGHT=36;
 
@@ -2066,7 +2066,7 @@ document.getElementById('openEvolution').onclick=async()=>{
  if(window.memoVAppliedReport?.enabled){alert('The V-section is applied. This analysis uses the previous vertical geometry and is paused until the new circulation and service routes are coordinated. Use the main 3D, unit focus, drawing set and coordinated structure views for the current geometry.');return;}
  window.memoWalk?.stop();
  window.memoEgress?.close();window.memoCoordination?.close();
- const {mountEvolution}=await import('/American-Superblock/evolution-workspace.js');
+ const {mountEvolution}=await import('./evolution-workspace.js');
  mountEvolution({THREE,scene,camera,controls,renderer,architecture:root,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings,entrances:gerehSystem.records}),meshForElement});
 };
 document.getElementById('openGeometry').onclick=()=>{
@@ -2083,41 +2083,41 @@ document.getElementById('openGeometry').onclick=()=>{
 };
 document.getElementById('openSpecs').onclick=()=>specsCatalog.products.length===43?mountSpecsWorkspace({THREE,scene,camera,controls,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings}),meshForElement,catalog:specsCatalog}):alert('Specification study could not load. Reload the page; the architecture model remains available.');
 document.getElementById('openDoors').onclick=async()=>{
- const {mountDoors}=await import('/American-Superblock/door-workspace.js');
+ const {mountDoors}=await import('./door-workspace.js');
  mountDoors({THREE,scene,camera,controls,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings,entrances:gerehSystem.records})});
 };
 document.getElementById('openEgress').onclick=async()=>{
  if(window.memoVAppliedReport?.enabled){alert('The V-section is applied. This analysis uses the previous vertical geometry and is paused until the new circulation and service routes are coordinated. Use the main 3D, unit focus, drawing set and coordinated structure views for the current geometry.');return;}
  window.memoCoordination?.close();
- const {mountEgress}=await import('/American-Superblock/egress-workspace.js');
+ const {mountEgress}=await import('./egress-workspace.js');
  mountEgress({THREE,scene,camera,renderer,controls,architecture:root,siteContext,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings}),getPickables:()=>[pieceGroup,bimGroup].filter(g=>g.visible).flatMap(g=>g.children.filter(m=>m.visible&&m.isMesh))});
 };
 document.getElementById('openPresentation').onclick=async()=>{
  window.memoWalk?.stop();window.memoEgress?.close();window.memoCoordination?.close();
- const {mountPresentationLab}=await import('/American-Superblock/presentation-lab.js');
+ const {mountPresentationLab}=await import('./presentation-lab.js');
  mountPresentationLab({getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2],entrances:gerehSystem.records}),openDrawings:()=>document.getElementById('openDocumentation').click()});
 };
 document.getElementById('openDocumentation').onclick=async()=>{
  window.memoEgress?.close();
  window.memoCoordination?.close();
- const {mountDocumentation}=await import('/American-Superblock/documentation.js');
+ const {mountDocumentation}=await import('./documentation.js');
  mountDocumentation(()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]}),specsCatalog);
 };
 document.getElementById('openCoordination').onclick=async()=>{
  window.memoEgress?.close();siteContext.visible=true;landscapeGroup.visible=true;site.visible=true;
- const {mountCoordination}=await import('/American-Superblock/coordination-3d.js');
+ const {mountCoordination}=await import('./coordination-3d.js');
  await mountCoordination({THREE,scene,camera,renderer,controls,architecture:root,getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]})});
 };
 document.getElementById('openLife').onclick=async()=>{
  if(window.memoVAppliedReport?.enabled){alert('The V-section is applied. This analysis uses the previous vertical geometry and is paused until the new circulation and service routes are coordinated. Use the main 3D, unit focus, drawing set and coordinated structure views for the current geometry.');return;}
  window.memoEgress?.close();window.memoCoordination?.close();
- const {mountLife}=await import('/American-Superblock/life-simulation.js');
+ const {mountLife}=await import('./life-simulation.js');
  mountLife({THREE,scene,camera,controls,renderer,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings,entrances:gerehSystem.records})});
 };
 document.getElementById('openStructure').onclick=async()=>{
  window.memoEgress?.close();
  window.memoCoordination?.close();
- const {mountStructure}=await import('/American-Superblock/structure-workspace.js');
+ const {mountStructure}=await import('./structure-workspace.js');
  await mountStructure({THREE,scene,getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]})});
 };
 document.getElementById('openMEP').onclick=async()=>{
@@ -2125,10 +2125,10 @@ document.getElementById('openMEP').onclick=async()=>{
  window.memoEgress?.close();
  window.memoCoordination?.close();
  if(window.memoMEP){window.memoMEP.show();return;}
- const {mountMEP}=await import('/American-Superblock/mep-workspace.js');
+ const {mountMEP}=await import('./mep-workspace.js');
  await mountMEP({THREE,scene,camera,renderer,architecture:root,getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]})});
 };
-const vSectionButton=document.createElement('button');vSectionButton.id='openVSection';vSectionButton.textContent='V section · Applied';document.getElementById('openCoordination').parentElement.prepend(vSectionButton);vSectionButton.onclick=async()=>{const {mountVSection}=await import('/American-Superblock/v-section-workspace.js');mountVSection({THREE,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings}),onApply:settings=>{Object.assign(vSettings,settings);window.memoCoordination?.close();window.memoModelControls?.restore();sync();updateBimView();window.memoInvalidate?.();}});};
+const vSectionButton=document.createElement('button');vSectionButton.id='openVSection';vSectionButton.textContent='V section · Applied';document.getElementById('openCoordination').parentElement.prepend(vSectionButton);vSectionButton.onclick=async()=>{const {mountVSection}=await import('./v-section-workspace.js');mountVSection({THREE,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings}),onApply:settings=>{Object.assign(vSettings,settings);window.memoCoordination?.close();window.memoModelControls?.restore();sync();updateBimView();window.memoInvalidate?.();}});};
 document.getElementById('setback').disabled=true;
 sync();
 mountModelControls({THREE,scene,camera,controls,renderer,getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]}),meshForElement,repaint:()=>{disposeGroup(pieceGroup);disposeGroup(bimGroup);bimBuilt=false;updateBimView();}});
@@ -2156,7 +2156,7 @@ document.getElementById('topBimRegistry').onclick=()=>mountBimWorkspace({getMode
 
 
 const walkButton=document.createElement('button');walkButton.id='openWalkthrough';walkButton.textContent='Walkthrough · WASD';document.getElementById('openCoordination').parentElement.append(walkButton);
-const {mountWalkthrough}=await import('/American-Superblock/walkthrough.js');window.memoWalk=mountWalkthrough({THREE,camera,controls,renderer,button:walkButton});
+const {mountWalkthrough}=await import('./walkthrough.js');window.memoWalk=mountWalkthrough({THREE,camera,controls,renderer,button:walkButton});
 let renderDirty=true,lastRender=0,lastShadowRoot=root.visible;
 window.memoInvalidate=()=>{renderDirty=true;};
 controls.addEventListener('change',window.memoInvalidate);

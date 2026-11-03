@@ -7,7 +7,7 @@ American Superblock by **MEMO Studio / Alireza Memarian** explores what happens 
 
 **[Open the interactive model →](https://memortal.github.io/American-Superblock/)** · **[Fork your own version →](https://github.com/Memortal/American-Superblock/fork)** · [Remix guide](#remix-it-with-ai)
 
-> GitHub Pages publishes the browser application from `main /docs`. If the link shows a 404, the repository owner must enable that source in Settings → Pages once.
+> GitHub Pages opens directly into the model. Both `main / (root)` and `main /docs` publishing sources are supported.
 
 ## Start with a question
 
@@ -95,10 +95,10 @@ bun run dev
 The checked-in `docs/` directory is a deployable static copy of the model. To rebuild it for a fork named `My-Superblock`:
 
 ```sh
-python3 scripts/build_pages.py --base /My-Superblock/
+python3 scripts/build_pages.py
 ```
 
-Commit the generated `docs/` files. In **Settings → Pages**, choose **Deploy from a branch**, **main**, and **/docs**, then save. After activation, commits updating that directory publish your changes. For this repository, the default build command already uses `/American-Superblock/`.
+Commit the generated `docs/` files. In **Settings → Pages**, choose **Deploy from a branch**, **main**, and **/docs**, then save. After activation, commits updating that directory publish your changes. Relative asset paths also support renamed forks and publishing from the repository root; its entry page opens `docs/`.
 
 ## Where to make changes
 
