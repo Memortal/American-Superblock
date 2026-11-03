@@ -1,0 +1,55 @@
+// Fixed cylindrical parking hub. Residential V parameters never size this footprint.
+export const circle=(r,n=96)=>Array.from({length:n},(_,i)=>[r*Math.cos(i*2*Math.PI/n),r*Math.sin(i*2*Math.PI/n)]);
+const area=r=>Math.abs(r.reduce((s,q,i)=>s+q[0]*r[(i+1)%r.length][1]-q[1]*r[(i+1)%r.length][0],0))/2;
+export function circularCorePlan(d){const radius=d.half;return {radius,polygon:circle(radius),pods:d.donors.map((donor,k)=>{const c=donor.servicePolygon.reduce((s,q)=>s.map((x,i)=>x+q[i]/donor.servicePolygon.length),[0,0]),L=Math.hypot(...c),u=c.map(x=>x/L),v=[-u[1],u[0]],origin=u.map((x,i)=>x*(radius-2)-v[i]*22),at=(x,y)=>origin.map((q,i)=>q+u[i]*x+v[i]*y),rect=(x,y,w,h)=>[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(q=>at(...q));return {id:'CORE-STAIR-'+(k+1),building:'CORE',assignedBuilding:donor.building,kind:'core',serviceCore:true,sharedCore:true,circularCore:true,parking:true,levels:d.levels,polygon:rect(0,0,21,44),area:924,core:{origin,u,v,compact:false,liftOrigins:[[2,4],[2,35]],courtyardDoors:true,stairDoorLocal:[14.25,15],stairLobbyLocal:[17.5,15],holes:[rect(2,4,8,8),rect(2,35,8,8),rect(2,13,12,21)]},discharge:{level:0,door:at(21,15),outside:at(27,15)},at,rect};})};}
+export function buildCircularCore({d,frame,pieces,buildings,addSection,part,coreComponents}){
+ const plan=circularCorePlan(d),R=plan.radius;d.radius=R;d.circular=true;d.polygon=plan.polygon;
+ const p={id:'CORE-PARKING',building:'CORE',kind:'parking',parking:true,polygon:d.polygon,area:area(d.polygon),upperArea:area(d.polygon),designArea:area(d.polygon),groundArea:area(d.polygon),levels:d.levels};d.piece=p;buildings.push({id:'CORE',name:'The Circular Core',parking:true,levels:d.levels,minLevel:-1,outer:d.polygon,courtyard:d.polygon});
+ const add=(l,type,id,parts,extra={})=>addSection(p,l,type,id,parts,{color:0xffffff,role:id.replaceAll('-',' '),component:true,entry:true,parking:true,layer:'parking',circularCore:true,alwaysVisible:type==='IFCSLAB'||type==='IFCWALL',...extra});
+ const pc=window.polygonClipping,clean=r=>r.slice(0,-1),cut=(poly,holes=[])=>{const rr=holes.length?pc.difference([poly],...holes.map(r=>[r])):[[poly]];return rr.map(r=>({polygon:holes.length?clean(r[0]):r[0],holes:holes.length?r.slice(1).map(clean):[]}));};
+ const polar=(r,a,sign=1)=>frame.world(sign*r*Math.cos(a),sign*r*Math.sin(a)),a0=Math.PI*.1,a1=Math.PI*.4,ro=R-16,ri=R-34,w=16,arc=(r0,r1,start,end,sign=1,n=24)=>[...Array.from({length:n+1},(_,i)=>polar(r1,start+(end-start)*i/n,sign)),...Array.from({length:n+1},(_,i)=>polar(r0,end-(end-start)*i/n,sign))];
+ const rampHoles=[-1,1].map(sign=>arc(ri-w/2,ro+w/2,a0,a1,sign));
+ // Two one-way folded arcuate ramps occupy opposite quadrants, clear of both ground axes.
+ for(const sign of [-1,1])for(let l=-1;l<d.levels-1;l++){
+  for(const [run,r,start,end]of [[0,ro,a0,a1],[1,ri,a1,a0]])for(let i=0;i<24;i++){const t=i/24,t1=(i+1)/24,A=start+(end-start)*t,B=start+(end-start)*t1,poly=[polar(r-w/2,A,sign),polar(r+w/2,A,sign),polar(r+w/2,B,sign),polar(r-w/2,B,sign)],z=l*12+run*6;add(l,'IFCRAMPFLIGHT','circular-ramp-'+sign+'-'+run+'-'+i,[{polygon:poly,z,height:.75,holes:[],elevations:[6*t,6*t,6*t1,6*t1]}],{ramp:true,role:'Curved parking ramp · turning and traffic review pending'});for(const edgeR of [r-w/2,r+w/2]){const guard=[polar(edgeR-.18,A,sign),polar(edgeR+.18,A,sign),polar(edgeR+.18,B,sign),polar(edgeR-.18,B,sign)];add(l,'IFCRAILING','circular-ramp-guard-'+sign+'-'+run+'-'+i+'-'+edgeR,[{polygon:guard,z:z+.75,height:3.5,holes:[],elevations:[6*t,6*t,6*t1,6*t1]}],{ramp:true});}}
+  for(const [a,z]of [[a0,l*12],[a1,l*12+6]])add(l,'IFCSLAB','ramp-turn-'+sign+'-'+z,[part(arc(ri-w/2,ro+w/2,a-.06,a+.06,sign,3),z,.75)],{slab:true});
+ }
+ d.rampSlope=6/(ri*(a1-a0));d.internalRampWidth=w;
+ pieces.push(...plan.pods.map(({at,rect,...p})=>p));
+ const deckLevels=[-1,...Array.from({length:d.levels-3},(_,i)=>i+3)];d.parkingArea=0;
+ for(const l of deckLevels){const holes=l===-1?plan.pods.map(c=>c.polygon):[...rampHoles,...plan.pods.map(c=>c.polygon)],zones=cut(d.polygon,holes);add(l,'IFCSLAB','circular-parking-deck',zones.map(q=>({...q,z:l*12,height:.75})),{slab:true});d.parkingArea+=zones.reduce((s,q)=>s+area(q.polygon)-q.holes.reduce((n,r)=>n+area(r),0),0);
+  const marks=[];for(const y of [-18,0])for(let x=-R+8;x+9<R-8;x+=9){const r=[[x,y],[x+9,y],[x+9,y+18],[x,y+18]].map(q=>frame.world(...q));if(r.some(q=>Math.hypot(...q)>R-3))continue;if(holes.some(h=>pc.intersection([r],[h]).length))continue;d.stalls.push({level:l,polygon:r,width:9,depth:18});for(const [xx,yy,ww,hh]of [[x,y,.1,18],[x,y,9,.1]])marks.push(part([[xx,yy],[xx+ww,yy],[xx+ww,yy+hh],[xx,yy+hh]].map(q=>frame.world(...q)),l*12+.02,.03));}add(l,'IFCBUILDINGELEMENTPROXY','circular-bay-lines',marks,{marking:true,color:0x444444});
+  const ring=pc.difference([circle(R)],[circle(R-.5)],...plan.pods.map(c=>[c.rect(-3,12,7,14)]));add(l,'IFCWALL','circular-parking-spandrel',ring.map(q=>part(clean(q[0]),l*12,3.5,q.slice(1).map(clean))),{wall:true,facade:true});
+ }
+ for(const pod of plan.pods){const cp=pieces.find(c=>c.id===pod.id),r=pod.rect;
+  for(let l=-1;l<d.levels;l++){const z=l*12,meta={parking:true,circularCore:true,component:true,entry:true,color:0xffffff};
+   const walls=[[0,0,.6,44],[0,0,21,.6],[0,43.4,21,.6],[20.4,0,.6,12],[20.4,18,.6,26]].map(q=>part(r(...q),z,12));walls.push(part(r(20.4,12,.6,6),z+8,4));addSection(cp,l,'IFCWALL','circular-pod-enclosure',walls,{...meta,wall:true,alwaysVisible:true});
+   for(const c of coreComponents(cp,l))addSection(cp,l,c.type,'circular-'+c.id,c.parts.map(q=>({...q,z:q.z+z})),{...meta,tread:c.tread||1.3});
+   addSection(cp,l,'IFCSLAB','circular-pod-floor',[part(cp.polygon,z,.75,cp.core.holes)],{...meta,slab:true});
+   // Actual door gaps and perimeter lobby: parking side, courtyard side, enclosed stair.
+   for(const [name,x,y,w,h]of [['courtyard-door',20.8,12,.15,6],['stair-door',14.25,13.125,.15,3.75]])addSection(cp,l,'IFCDOOR',name,[part(r(x,y,w,h),z+.75,8)],{...meta,exitDoor:l===0,role:name+' · scheduled rating and hardware pending'});
+   addSection(cp,l,'IFCSLAB','circular-pod-arrival',[part(r(-7,-7,34,6.5),z,.75),part(r(21,-7,6,26),z,.75)],{...meta,slab:true,circulation:true,alwaysVisible:true});
+  }
+ }
+ // Vertical perimeter supports stay in donor quadrants; neither 34 ft promenade receives columns.
+ for(let k=0;k<24;k++){const a=2*Math.PI*k/24,q=polar(R-4,a);const local=frame.local(q);if(Math.abs(local[0])<18||Math.abs(local[1])<18)continue;if(plan.pods.some(c=>pc.intersection([c.polygon],[[[q[0]-1,q[1]-1],[q[0]+1,q[1]-1],[q[0]+1,q[1]+1],[q[0]-1,q[1]+1]]]).length))continue;for(let l=-1;l<d.levels;l++)add(l,'IFCCOLUMN','circular-column-'+k,[part([[q[0]-1,q[1]-1],[q[0]+1,q[1]-1],[q[0]+1,q[1]+1],[q[0]-1,q[1]+1]],l*12,12)],{structural:true,alwaysVisible:true,lodMin:100});}
+ add(d.levels-1,'IFCSLAB','circular-core-roof',[part(d.polygon,d.levels*12-.75,.75)],{slab:true,roof:true});
+ for(const pod of plan.pods){const cp=pieces.find(c=>c.id===pod.id);addSection(cp,d.levels-1,'IFCSLAB','circular-pod-roof',[part(cp.polygon,d.levels*12,.75)],{slab:true,roof:true,parking:true,circularCore:true,alwaysVisible:true,color:0xffffff});}
+ d.deckCount=deckLevels.length;d.stallCount=d.stalls.length;d.pedestrianClear=true;d.coreReport={radius:R,diameter:2*R,pods:4,stairs:4,elevators:8,angleIndependent:true,analysisStatus:'Geometry only; ramp turning, structural spans and egress require review'};
+ return d;
+}
+// Adapt only the small arrival links to the actual transformed gallery surfaces.
+export function connectCircularCore(model,d){const report={...d.coreReport,connections:[],unresolved:[]},pc=window.polygonClipping,dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]),strip=(a,b,w)=>{const L=dist(a,b)||1,n=[-(b[1]-a[1])/L*w/2,(b[0]-a[0])/L*w/2];return [a.map((x,i)=>x+n[i]),b.map((x,i)=>x+n[i]),b.map((x,i)=>x-n[i]),a.map((x,i)=>x-n[i])];},bounds=r=>[Math.min(...r.map(q=>q[0])),Math.min(...r.map(q=>q[1])),Math.max(...r.map(q=>q[0])),Math.max(...r.map(q=>q[1]))];
+ for(const c of model.pieces.filter(p=>p.circularCore))for(let l=3;l<c.levels;l++){const at=(x,y)=>c.core.origin.map((v,i)=>v+c.core.u[i]*x+c.core.v[i]*y),a=at(24,15),targets=model.elements.filter(e=>e.building===c.assignedBuilding&&e.level===l&&(e.id.includes('upper-gallery-floor')||l===3&&e.cleanTerrace)).flatMap(e=>e.parts),candidates=[];
+  for(const p of targets)for(let i=0;i<p.polygon.length;i++){const q=p.polygon[i],r=p.polygon[(i+1)%p.polygon.length],v=r.map((x,j)=>x-q[j]),L=v[0]**2+v[1]**2,t=Math.max(0,Math.min(1,((a[0]-q[0])*v[0]+(a[1]-q[1])*v[1])/(L||1)));for(const k of [t,.25,.5,.75]){const b=q.map((x,j)=>x+k*v[j]);if(dist(a,b)<90)candidates.push(b);}}
+  if(!targets.length)continue;const blockers=model.elements.filter(e=>e.building===c.assignedBuilding&&e.level===l&&e.space&&!e.circulation).flatMap(e=>e.parts).map(p=>({p,bb:bounds(p.polygon)}));const clear=poly=>{const bb=bounds(poly);return !blockers.some(({p,bb:r})=>bb[0]<r[2]&&bb[2]>r[0]&&bb[1]<r[3]&&bb[3]>r[1]&&pc.intersection([poly],[p.polygon,...p.holes||[]]).some(r=>area(r[0])>2));};
+  candidates.sort((b,c)=>dist(a,b)-dist(a,c));let best;for(const b of candidates){const poly=strip(a,b,3.5);if(clear(poly)){best={path:[a,b],polys:[poly],length:dist(a,b)};break;}}
+  if(!best)for(const dy of [-12,12,-24,24,-36,36]){const mid=at(24,15+dy),first=strip(a,mid,3.5);if(!clear(first))continue;for(const b of candidates){const second=strip(mid,b,3.5),length=dist(a,mid)+dist(mid,b);if(length<100&&clear(second)&&(!best||length<best.length))best={path:[a,mid,b],polys:[first,second],length};}}
+  if(!best){report.unresolved.push({core:c.id,level:l,reason:'No clear arrival link within 100 ft; connection withheld'});continue;}
+  const zones=pc.union(...best.polys.map(p=>[p])),parts=zones.map(r=>({polygon:r[0].slice(0,-1),holes:r.slice(1).map(q=>q.slice(0,-1)),z:l*12,height:.75}));model.elements.push({id:c.id+'-V-ARRIVAL-L'+l,type:'IFCSLAB',building:'CORE',piece:c,level:l,layer:l===3?'void':'upper',parts,slab:true,circulation:true,parkingAccess:true,circularCore:true,component:true,entry:true,alwaysVisible:true,color:0xffffff,role:'Adaptive V gallery arrival · support and egress analysis pending'});report.connections.push({core:c.id,building:c.assignedBuilding,level:l,length:best.length,width:3.5,path:best.path});
+  const guards=[];for(let j=1;j<best.path.length;j++){const a=best.path[j-1],b=best.path[j],L=dist(a,b)||1,n=[-(b[1]-a[1])/L,(b[0]-a[0])/L];for(const sign of [-1,1])guards.push({polygon:strip(a.map((x,i)=>x+n[i]*sign*1.9),b.map((x,i)=>x+n[i]*sign*1.9),.15),z:l*12+.75,height:3.5,holes:[]});}model.elements.push({id:c.id+'-V-ARRIVAL-GUARDS-L'+l,type:'IFCRAILING',building:'CORE',piece:c,level:l,layer:l===3?'void':'upper',parts:guards,circulation:true,circularCore:true,component:true,entry:true,color:0x999999,role:'Arrival edge guards; ends remain open'});
+
+  for(const e of model.elements.filter(e=>e.building===c.assignedBuilding&&e.level===l&&e.id.includes('gallery-guards')))e.parts=e.parts.flatMap(p=>pc.difference([p.polygon,...p.holes||[]],zones).map(r=>({...p,polygon:r[0].slice(0,-1),holes:r.slice(1).map(q=>q.slice(0,-1))})));
+ }
+ return report;
+}

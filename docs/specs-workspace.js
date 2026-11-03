@@ -1,0 +1,62 @@
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clean=x=>String(x??'').toLowerCase();
+const filename=(name,content,mime='application/json')=>{const blob=new Blob([content],{type:mime}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);};
+export function mountSpecsWorkspace({THREE,scene,camera,controls,getModel,meshForElement,catalog}){
+ let panel=document.getElementById('memoSpecsWorkspace');
+ if(window.memoSpecsWorkspace){window.memoSpecsWorkspace.show();return window.memoSpecsWorkspace;}
+ const style=document.createElement('style');style.id='memoSpecsStyles';style.textContent=
+ '#memoSpecsWorkspace{position:fixed;z-index:21000;top:calc(var(--memo-header-h,86px) + 50px);right:10px;bottom:12px;width:min(440px,calc(100vw - 20px));overflow:auto;box-sizing:border-box;border:1px solid #aab6ad;box-shadow:0 12px 46px #0003;background:#fff;color:#25352a;font:12px/1.5 Arial,sans-serif}#memoSpecsWorkspace header{background:#173c30;color:#fff;padding:17px;position:sticky;top:0;z-index:2}#memoSpecsWorkspace header h2{font-size:20px;font-weight:500;margin:5px 0}#memoSpecsWorkspace main{padding:14px}#memoSpecsWorkspace input,#memoSpecsWorkspace select{box-sizing:border-box;width:100%;background:#fff;color:#223;border:1px solid #bdc7bf;padding:9px;margin:5px 0 10px}#memoSpecsWorkspace button{padding:7px 10px;margin:4px 4px 4px 0;background:#f4f7f3;color:#173b2b;border:1px solid #bac9be;cursor:pointer}#memoSpecsWorkspace button.active,#memoSpecsWorkspace button.primary{background:#214d39;color:#fff}#memoSpecsWorkspace .count{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 15px}#memoSpecsWorkspace .count div{border:1px solid #d6ddd5;padding:8px}#memoSpecsWorkspace .count b{display:block;font-size:20px}#memoSpecsWorkspace .item{border-bottom:1px solid #dfe5df;padding:10px 0;overflow-wrap:anywhere}#memoSpecsWorkspace .item b{font-size:12px}#memoSpecsWorkspace .item small,#memoSpecsWorkspace .note{display:block;color:#69756b;font-size:10px;line-height:1.5;margin:3px 0}#memoSpecsWorkspace .item a{color:#186142}#memoSpecsWorkspace .chip{display:inline-block;font-size:9px;padding:2px 7px;border:1px solid #d3d7d0;border-radius:9px;margin:0 3px 4px 0}#memoSpecsWorkspace details{padding:6px 0}#memoSpecsWorkspace .warning{padding:11px;background:#f5f0e5;color:#624b24;margin:10px 0}#memoSpecsWorkspace .tab{display:none}#memoSpecsWorkspace .tab.visible{display:block}@media(max-width:700px){#memoSpecsWorkspace{left:6px;right:6px;bottom:0;top:auto;max-height:60dvh;width:auto}}';
+ document.head.append(style);panel=document.createElement('aside');panel.id='memoSpecsWorkspace';
+ panel.innerHTML='<header><button id="specClose" style="float:right">Close ×</button><small>MEMO / ARCHITECTURAL BIM</small><h2>Specs · Manufacturer Library</h2><small>43 products · 18 element classes · five dimensional prototypes</small></header><main><div class="warning">RESEARCH / DIMENSIONED PILOTS — Not approved for construction. Manufacturer source dimensions are recorded; whole-system performance, exact extrusion geometries, native BRep, fire ratings and code compliance are not certified.</div><div class="count" id="specCounts"></div><nav><button data-tab="elements" class="active">BIM mapping</button><button data-tab="catalog">Products (43)</button><button data-tab="pilots">5 models</button><button data-tab="gaps">Design gaps</button></nav><section id="spec-tab-elements" class="tab visible"><label>BIM element or IFC class<input id="specElementQuery" placeholder="e.g. IFCWINDOW, roof, B1-"></label><div id="specMappings"></div><button id="specExport">Export element spec schedule (CSV)</button></section><section id="spec-tab-catalog" class="tab"><label>Search products and manufacturers<input id="specProductQuery" placeholder="Kawneer, door, glazing, roof…"></label><select id="specDiscipline"><option value="all">All architecture + facade products</option><option value="01">01 — Architecture</option><option value="02">02 — Openings & façade</option></select><div id="specCatalog"></div></section><section id="spec-tab-pilots" class="tab"><div class="warning">Five product families are modeled as prototype geometry using published dimensional values. Cross-sections without manufacturer CAD, unapproved assembly choices and integration/penetrations remain approximate. Sample geometry stays separately visualized so it cannot obscure the original architecture.</div><label style="display:block"><input id="specShow" type="checkbox" style="width:auto"> Show 3D dimensional prototypes in superblock</label><select id="specPilotProduct"><option value="all">All five modeled product types</option></select><button id="specFrame" class="primary">Zoom to selected prototype</button><div id="specPilotList"></div><button id="specExportPilots">Export pilot component JSON</button></section><section id="spec-tab-gaps" class="tab"><div id="specGaps"></div><h3>Required BIM property set</h3><div id="specProps"></div></section></main>';
+ document.body.append(panel);
+ const $=id=>panel.querySelector('#'+id);
+ let selectedPilot='all',visible=false;
+ const group=new THREE.Group();group.name='MEMO manufacturer dimensioned samples';group.visible=false;scene.add(group);
+ const status=()=>window.memoSpecsReport||{total:0,mapped:0,unmapped:0,pilotElements:0,categories:{}};
+ function drawPilots(){
+  for(const o of [...group.children]){group.remove(o);o.traverse?.(c=>{c.geometry?.dispose?.();c.material?.dispose?.();});}
+  const samples=getModel().elements.filter(e=>e.specPilot&&(selectedPilot==='all'||String(e.specProductIndex)===selectedPilot));
+  for(const e of samples){try{const m=meshForElement(e,true,350);m.userData.specPilot=e.id;group.add(m);}catch(err){console.warn('MEMO spec pilot geometry skipped:',e.id,err);}}
+  group.visible=visible;window.memoInvalidate?.();
+ }
+ function counts(){
+  const x=status();$('specCounts').innerHTML='<div><b>'+x.total.toLocaleString()+'</b><small>Base elements indexed</small></div><div><b>'+x.mapped.toLocaleString()+'</b><small>With candidates</small></div><div><b>'+x.pilotElements+'</b><small>Modeled parts</small></div>';
+ }
+ function mapping(){
+  const q=clean($('specElementQuery').value),cat=status().categories||{},entries=Object.entries(cat).filter(([k])=>clean(k).includes(q)).sort((a,b)=>b[1]-a[1]);
+  const elements=q?getModel().elements.filter(e=>!e.specPilot&&(clean(e.id).includes(q)||clean(e.type).includes(q)||clean(e.specs?.category).includes(q))).slice(0,100):[];
+  $('specMappings').innerHTML='<p class="note">Candidates are assigned by existing IFC class, element role and flags. No product is automatically approved or purchased. Nonarchitecture disciplines are marked outside scope.</p>'+(!q?entries.map(([name,n])=>'<div class="item"><b>'+esc(name)+'</b> · '+n.toLocaleString()+' elements</div>').join(''):elements.map(e=>'<div class="item"><b>'+esc(e.id)+'</b><small>'+esc(e.type)+' · '+esc(e.specs?.category)+' · '+esc(e.specs?.status)+'</small>'+(e.specs?.primary?'<span>'+esc(e.specs.primary.manufacturer+' / '+e.specs.primary.family)+'</span>':'No manufacturer candidate yet')+'</div>').join('')||'<p>No matches.</p>');
+ }
+ function catalogList(){
+  const q=clean($('specProductQuery').value),d=$('specDiscipline').value,found=catalog.products.filter(p=>(d==='all'||String(p.Discipline).startsWith(d))&&clean(Object.values(p).join(' ')).includes(q));
+  $('specCatalog').innerHTML='<p class="note">'+found.length+' of '+catalog.products.length+' research products. Click the official product document for full performance context.</p>'+found.map(p=>'<article class="item"><span class="chip">'+esc(p['Selection role'])+'</span><b>'+esc(p.Manufacturer)+'</b><div>'+esc(p['Verified product / family'])+'</div><small>'+esc(p['BIM element'])+' · '+esc(p['Suggested IFC entity'])+'</small><details><summary>Dimensions, performance and outstanding requirements</summary><p><b>Published dimensions</b> '+esc(p['Published dimensions / make-up'])+'</p><p><b>Published performance</b> '+esc(p['Published performance / standards'])+'</p><p><b>Superblock application</b> '+esc(p['Superblock application'])+'</p><p><b>Unresolved</b> '+esc(p['Unresolved project specification'])+'</p><p><b>BIM / CAD</b> '+esc(p['BIM or CAD resource'])+'</p></details><a href="'+esc(p['Official technical source URL'])+'" target="_blank" rel="noopener noreferrer">Official product / technical source ↗</a></article>').join('');
+ }
+ function pilotList(){
+  const ids=[3,5,6,12,32];
+  const samples=getModel().elements.filter(e=>e.specPilot);
+  $('specPilotList').innerHTML=ids.map(i=>{const p=catalog.products[i],rows=samples.filter(e=>e.specProductIndex===i);return '<div class="item"><span class="chip">'+rows.length+' parts</span><b>'+esc(p.Manufacturer)+' — '+esc(p['Verified product / family'])+'</b><small>'+esc(p['Published dimensions / make-up'])+'</small><div>'+esc(rows[0]?.role||'No matching host found in current design')+'</div><small>'+(rows.length?'Prototype — check assembly placement and exact manufacturer details':'Not generated')+'</small><a target="_blank" rel="noopener noreferrer" href="'+esc(p['Official technical source URL'])+'">Manufacturer source ↗</a></div>'}).join('');
+ }
+ function gaps(){ $('specGaps').innerHTML=catalog.designGaps.map(g=>'<div class="item"><b>'+esc(g['Design decision / issue'])+'</b><small>'+esc(g.Priority)+' · '+esc(g.Status)+'</small><p>'+esc(g['Action needed'])+'</p></div>').join('');$('specProps').innerHTML=catalog.propertyMap.map(p=>'<div class="item"><b>'+esc(p.Parameter)+'</b> <small>'+esc(p['Meaning / units'])+' · '+esc(p.Requirement)+'</small></div>').join('');}
+ function show(){panel.hidden=false;counts();mapping();pilotList();catalogList();gaps();drawPilots();}
+ $('specClose').onclick=()=>{panel.hidden=true;group.visible=false;window.memoInvalidate?.();};
+ panel.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{for(const el of panel.querySelectorAll('[data-tab]'))el.classList.toggle('active',el===b);for(const el of panel.querySelectorAll('.tab'))el.classList.toggle('visible',el.id==='spec-tab-'+b.dataset.tab);});
+ $('specElementQuery').oninput=mapping;$('specProductQuery').oninput=catalogList;$('specDiscipline').onchange=catalogList;
+ $('specShow').onchange=()=>{visible=$('specShow').checked;drawPilots();};
+ const ids=[3,5,6,12,32];$('specPilotProduct').innerHTML+=[...ids].map(i=>'<option value="'+i+'">'+esc(catalog.products[i].Manufacturer+' / '+catalog.products[i]['Verified product / family'])+'</option>').join('');
+ $('specPilotProduct').onchange=()=>{selectedPilot=$('specPilotProduct').value;drawPilots();};
+ $('specFrame').onclick=()=>{
+  if(!visible){$('specShow').checked=true;visible=true;drawPilots();}
+  const e=getModel().elements.find(e=>e.specPilot&&(selectedPilot==='all'||String(e.specProductIndex)===selectedPilot));if(!e)return;
+  const p=e.parts[0];if(!p?.polygon?.length)return;
+  const a=p.polygon.reduce((s,q)=>s.map((v,i)=>v+q[i]/p.polygon.length),[0,0]),h=p.z+p.height/2;
+  camera.position.set(a[0]+16,h+12,a[1]+16);controls.target.set(a[0],h,a[1]);controls.update();window.memoInvalidate?.();
+ };
+ $('specExport').onclick=()=>{
+  const rows=[['Element ID','Building','Level','IFC Class','Specification Category','Status','Candidate Manufacturer','Candidate Product','Official Source','Approved','Native BRep Validated']];
+  for(const e of getModel().elements){const s=e.specs||{};rows.push([e.id,e.building,e.level,e.type,s.category,s.status,s.primary?.manufacturer,s.primary?.family,s.primary?.source,s.approved?'YES':'NO',s.exactNativeBRep?'YES':'NO']);}
+  const csv=rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n');filename('MEMO_Superblock_BIM_Spec_Schedule.csv',csv,'text/csv');
+ };
+ $('specExportPilots').onclick=()=>filename('MEMO_5_Manufacturer_Dimensioned_Prototypes.json',JSON.stringify({note:'Research prototype: no exact manufacturer BRep or tested assembly',units:'feet',elements:getModel().elements.filter(e=>e.specPilot).map(e=>({id:e.id,building:e.building,level:e.level,type:e.type,role:e.role,source:e.specs?.primary,host:e.specHostId,parts:e.parts}))},null,2));
+ const api={show,refresh:()=>{counts();mapping();pilotList();drawPilots();},get group(){return group}};
+ window.memoSpecsWorkspace=api;show();return api;
+}

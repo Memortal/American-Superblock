@@ -1,0 +1,2187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MEMO Studio — American Superblock</title>
+<style>
+:root{
+  --bg:#f2efe9;--panel:rgba(250,248,244,.96);--ink:#1f1d1a;--muted:#6e6962;--line:#d8d2c8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--ink)}
+#scene{position:fixed;inset:0}
+canvas{display:block}
+.title{
+  position:fixed;left:18px;top:18px;z-index:10;padding:12px 14px;border-radius:15px;
+  background:rgba(250,248,244,.92);border:1px solid rgba(80,70,60,.16);backdrop-filter:blur(14px)
+}
+.title b{display:block;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.title span{font-size:11px;color:var(--muted)}
+.panel{
+  position:fixed;right:18px;top:18px;bottom:18px;width:338px;z-index:10;
+  background:var(--panel);border:1px solid rgba(80,70,60,.16);backdrop-filter:blur(16px);
+  border-radius:20px;overflow:auto;padding:16px;box-shadow:0 14px 42px rgba(60,50,40,.12)
+}
+h2{font-size:14px;margin:0 0 4px}
+.sub{font-size:10px;line-height:1.45;color:var(--muted);margin-bottom:15px}
+.fixed{
+  display:grid;grid-template-columns:1fr auto;gap:8px;padding:9px 10px;margin:7px 0;
+  background:#f0ebe2;border:1px solid #ddd6cd;border-radius:11px
+}
+.fixed span,.fixed b{font-size:11px}
+.section{margin-top:17px}
+.section h3{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6a645d;margin:0 0 8px}
+.row{display:grid;grid-template-columns:1fr 74px;gap:8px;align-items:center;margin:10px 0}
+.row label{font-size:11px}
+.row output{font-size:10px;color:var(--muted);text-align:right}
+.row input{grid-column:1/-1;width:100%;accent-color:#302d29}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.check{font-size:10px;display:flex;gap:6px;align-items:center}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+button{
+  border:1px solid #cbc3b8;background:#fffdf9;border-radius:10px;padding:10px 9px;font-size:11px;font-weight:650;color:#211f1c;cursor:pointer
+}
+button.primary{background:#211f1c;color:#fff;border-color:#211f1c}
+.legend{
+  position:fixed;left:18px;bottom:18px;z-index:10;padding:9px 11px;border-radius:12px;
+  background:rgba(250,248,244,.92);border:1px solid rgba(80,70,60,.16);font-size:10px;color:var(--muted);backdrop-filter:blur(14px)
+}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:0}
+@media(max-width:720px){
+  .panel{right:8px;top:8px;bottom:8px;width:286px}
+  .title{left:8px;top:8px;max-width:calc(100vw - 310px)}
+  .legend{display:none}
+}
+
+:root{--bg:#f7f7f4;--panel:#fff;--ink:#202322;--muted:#7b817e;--line:#e6e9e5}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg)}
+.masthead{position:fixed;inset:0 0 auto;height:86px;background:#fff;border-bottom:1px solid var(--line);z-index:20;display:flex;align-items:center;padding:0 30px;gap:45px}
+.wordmark{font-size:30px;letter-spacing:-1.8px;font-weight:800;display:flex;align-items:baseline}.wordmark span{font-weight:400}.wordmark i{width:9px;height:9px;background:#ec9cae;margin-left:6px;border-radius:50%}
+.project-heading{display:flex;flex-direction:column;gap:6px}.project-heading span,.eyebrow{font-size:9px;letter-spacing:1.7px;color:#7b817e;font-weight:700}.project-heading strong{font-size:16px;font-weight:500;letter-spacing:-.2px}.project-tag{margin-left:auto;font-size:11px;font-weight:700}.project-tag span{display:block;margin-top:6px;font-size:9px;color:var(--muted);letter-spacing:1px}
+#scene{top:86px;right:460px;bottom:0}.panel{top:86px;right:0;bottom:0;width:460px;border:0;border-left:1px solid var(--line);border-radius:0;box-shadow:none;background:#fff;padding:28px;backdrop-filter:none}
+.eyebrow{display:flex;justify-content:space-between;letter-spacing:1.2px}.eyebrow span{font-size:8px;color:#a0a6a1}h1{font-size:31px;font-weight:500;line-height:1.12;letter-spacing:-1.2px;margin:22px 0 13px}.intro{font-size:12px;line-height:1.65;color:#787f7a;margin:0 0 24px;max-width:360px}
+.metric-total{display:flex;justify-content:space-between;align-items:end;padding:0 0 20px;border-bottom:1px solid var(--line)}.metric-total strong{font-size:49px;font-weight:500;letter-spacing:-2.5px;line-height:1}.metric-total small{display:block;font-size:10px;color:#858b87;margin-top:8px}.metric-total .metric-area{text-align:right}.metric-area b{font-size:18px;font-weight:500}.metric-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.metric-card{padding:16px 13px;border:1px solid var(--line);border-top:3px solid #cc8f9b;border-radius:3px;background:#fcf8f9}.metric-card.box{border-top-color:#93b5b1;background:#f6f9f8}.metric-card strong{font-size:30px;font-weight:500;letter-spacing:-1px}.metric-card label{display:block;font-size:11px;margin:7px 0 13px}.metric-card p{font-size:11px;margin:0;color:#5e6963}.metric-card small{display:block;font-size:9px;color:#939a95;margin-top:6px}
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:22px 0}button{border:1px solid #dfe3df;border-radius:4px;background:#fff;padding:12px;font-size:11px}button:hover{background:#f4e5e9}button.primary{background:#242a27;border-color:#242a27;color:white}
+.report-section{border-top:1px solid var(--line);padding:21px 0;margin:0}.section-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.section-heading h3{font-size:12px;font-weight:600;margin:0;letter-spacing:0;color:#202322}.section-heading span{font-size:8px;letter-spacing:1px;color:#929b94}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}th{text-align:right;color:#8a938c;font-size:9px;font-weight:400;padding:0 0 10px}td{text-align:right;border-top:1px solid #edf0ec;padding:11px 0;font-size:11px}td:first-child,th:first-child{text-align:left}td small{font-size:8px;color:#8b938e;display:block;margin-top:5px}.building-letter{background:#f0f2ef;padding:5px 8px;border-radius:3px;font-weight:600}.area-line{display:flex;justify-content:space-between;padding:8px 0;font-size:11px}.area-line span{color:#768079}.area-line b{font-weight:500}.note{font-size:10px;color:#909990;line-height:1.6}.mix-bar{height:5px;background:#93b5b1;margin:12px 0 8px;border-radius:3px;overflow:hidden}.mix-bar span{height:100%;display:block;background:#c5a187}
+summary{font-size:12px;font-weight:600;cursor:pointer}.report-footer{font-size:9px;line-height:1.8;color:#98a099;border-top:1px solid var(--line);padding-top:20px}.report-footer b{letter-spacing:1px;color:#59645b}.model-controls h2,.model-controls>.sub{display:none}.model-controls .section{margin-top:20px}.fixed{background:#f6f7f4;border-color:#e7eae5;border-radius:4px}.row{grid-template-columns:1fr 125px}select{font:11px Arial;padding:7px;border:1px solid #dfe3df;background:white;border-radius:3px;color:#343d36}.schedule-scroll{max-height:380px;overflow:auto}.schedule-scroll td{font-size:9px}.schedule-scroll th{position:sticky;top:0;background:white}.view-tools{position:fixed;bottom:63px;left:26px;z-index:10;display:flex;gap:4px;padding:5px;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:6px}.view-tools button{border:0;padding:10px 13px}.legend{left:26px;bottom:22px;display:flex;gap:18px;border:0;background:transparent;padding:0;backdrop-filter:none;font-size:10px;color:#78837a}
+@media(max-width:1000px){.panel{width:390px;padding:22px}#scene{right:390px}.masthead{gap:25px;padding:0 22px}.legend{gap:8px;font-size:8px}.view-tools{left:14px}.view-tools button{padding:8px;font-size:10px}}
+@media(max-width:700px){.masthead{height:70px;padding:0 14px;gap:16px}.wordmark{font-size:24px}.project-heading strong{font-size:12px}.project-heading span{font-size:7px}.project-tag{display:none}#scene{top:70px;right:0;bottom:52vh}.panel{top:48vh;width:100%;height:52vh;right:0;padding:22px;border-top:1px solid var(--line)}.view-tools{top:calc(48vh - 46px);bottom:auto;left:10px}.legend{display:none}h1{font-size:27px}}
+
+.section-story{border:1px solid #e3e6e0;border-radius:5px;overflow:hidden;margin:18px 0}.section-story>div{display:flex;gap:18px;padding:15px;background:#eef4f1;border-bottom:1px solid #dfe4dd}.section-story b{font-size:16px;min-width:48px}.section-story span{font-size:10px;letter-spacing:1px}.section-story small{display:block;font-size:10px;letter-spacing:0;color:#7e887f;margin-top:6px}.section-story .void-band{background:#fff;border-top:1px dashed #d7d9ce;border-bottom:1px dashed #d7d9ce}.section-story .valley-band{background:#f4ebe3;border-bottom:0}.row{grid-template-columns:1fr 190px}.row select{max-width:190px}.metric-card{border-top-color:#c5a187;background:#faf6f1}
+.program-key{display:flex;flex-wrap:wrap;gap:10px;font-size:10px;margin:14px 0;color:#616a63}.program-key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}.section-story .valley-band{background:#faeaf0}.metric-card{border-top-color:#d78ead;background:#fcf4f7}
+.program-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.program-card{border:1px solid #e3e6df;border-top:3px solid var(--program);border-radius:4px;padding:15px 12px}.program-count{font-size:32px;line-height:1.1;font-weight:500}.program-count span{display:block;font-size:11px;line-height:1.4;min-height:32px;margin:8px 0 16px}.program-sf{font-size:18px;font-variant-numeric:tabular-nums}.program-sf small{font-size:8px;color:#72796f}.program-card p{font-size:10px;color:#677065;margin:7px 0 14px}.program-card>small{font-size:9px;line-height:1.5;color:#7b8379;display:block}
+.program-card{background:#fff!important;border-top-color:#111!important}.program-key i{background:#fff!important;border:1px solid #333}.section-story>div,.section-story .valley-band{background:#f7f7f7}.metric-card,.metric-card.box{background:#fff;border-top-color:#111}.legend .dot{background:#fff!important;border:1px solid #555}.wordmark i{background:#111}.program-key span:last-child i{background:#111!important}
+</style>
+<link rel="stylesheet" href="/American-Superblock/ui-layout.css"/><link rel="stylesheet" href="/American-Superblock/presentation-lab.css"/>
+</head>
+<body>
+<div id="scene"></div>
+
+<header class="masthead"><div class="wordmark">memo<span>studio</span><i></i></div><div class="project-heading"><span>URBAN HOUSING / CONCEPT PROPOSAL</span><strong>American Superblock</strong></div><div class="project-tag">660 × 660 FT <span>10.00 ACRES</span></div></header>
+<div id="modelControls" role="toolbar" aria-label="Model detail and inspection"><label class="memo-lod-picker" for="memoLOD">MODEL LOD <select id="memoLOD" aria-label="Model level of detail"><option value="100" selected>100 · Concept</option><option value="200">200 · Schematic</option><option value="300">300 · BIM</option><option value="350">350 · Interfaces</option><option value="400">400 · Available detail</option></select></label><button id="topDoorSchedule" disabled>Door schedule</button><button id="topUnitFocus" disabled>Focus unit</button><button id="topBimRegistry" disabled>BIM Types &amp; Schedules</button><span id="detailNote">Loading model…</span></div>
+<div class="view-tools" role="toolbar" aria-label="Model tools; swipe or scroll horizontally for more" tabindex="0"><button id="openLife" hidden style="display:none">Life Lab ✳</button><button id="openEvolution" style="background:#294c37;color:white">Couple Living Lab ✳</button><button id="openGeometry" style="background:#173a2e;color:white">Geometry Engine ↗</button><button id="openCoordination">Coordinated 3D ↗</button><button id="openStructure">Structure ↗</button><button id="openSpecs" style="background:#284b3b;color:#fff">Specs · 43 products ↗</button><button id="openMEP">MEP systems ↗</button><button id="openPresentation" style="background:#262e2a;color:white">Presentation Lab ↗</button><button id="openDocumentation">Drawing set ↗</button><button id="openEgress">Unit egress ↗</button><button id="openDoors">Doors / graph ↗</button><button onclick="document.getElementById('axon').click()">3D view</button><button onclick="document.getElementById('plan').click()">Site plan</button><button onclick="document.getElementById('low').click()">Street view</button><button onclick="document.getElementById('sectionLayer').value='parking';const e=document.getElementById('buildingFocus');e.value='CORE';e.dispatchEvent(new Event('change'))">Parking / tunnel</button><button onclick="const e=document.getElementById('bimView');e.value=e.value==='source'?'bim':'source';e.dispatchEvent(new Event('change'))">Massing / BIM</button></div>
+<aside class="panel">
+<div class="eyebrow">DESIGN AT A GLANCE <span>SECTION STUDY / 04</span></div>
+<h1>V-shaped wings.<br>Stepped valleys.</h1>
+<p class="intro">The residential wings now lean outward around the valley. Clean sloping outer faces contrast with stepped inner edges and horizontal floors. Cores stay vertical through retained corner connections. The central circular hub keeps its diameter as the V angle changes, with four stair-and-elevator groups around its edge. MEP, egress and inclined-frame engineering require recomputation.</p>
+<div class="section-story"><div><b>05+</b><span>APARTMENTS<small>Lower duplex crowns · 12′ open ring</small></span></div><div class="void-band"><b>04</b><span>THE OPEN HORIZON<small>15′ extended deck + L5 ceiling · valley slots</small></span></div><div class="valley-band"><b>01–03</b><span>TWO LOWER LIVING TYPES<small>Courtyard triplexes · street duplexes above parking</small></span></div></div>
+<div class="row"><label for="buildingFocus">Focus building</label><select id="buildingFocus"><option value="all">Entire superblock</option><option value="B1">Building A</option><option value="B2">Building B</option><option value="B3">Building C</option><option value="B4">Building D</option><option value="CORE">The Core · parking</option></select></div>
+<div class="row"><label for="sectionLayer">Explore a layer</label><select id="sectionLayer"><option value="all">Whole section</option><option value="valley">Triplex valley · L1–3</option><option value="void">Column-supported open level · L4</option><option value="upper">All upper housing</option><option value="duplex">Roof duplexes</option><option value="apartments">Middle apartments</option><option value="parking">The Core + ramps + tunnel</option></select></div>
+<label class="check" style="margin-bottom:20px"><input id="sectionCut" type="checkbox"> Cut through the model to reveal interiors</label>
+<div class="program-key"><span><i style="background:#dca0bd"></i>Triplex homes</span><span><i style="background:#85ab7d"></i>Upper box units</span><span><i style="background:#91b6c9"></i>Upper L units</span><span><i style="background:#d99a4e"></i>Offices</span><span><i style="background:#888"></i>Cores</span><span><i style="background:#080808"></i>Cut structure</span></div><div id="proposalMetrics"></div><section class="report-section" id="parkingReport"></section>
+<div class="action-row"><button class="primary" onclick="document.getElementById('exportIfc').click()">Download IFC ↗</button><button onclick="document.getElementById('unitSchedule').open=!document.getElementById('unitSchedule').open">Unit schedule ↓</button></div>
+<section class="report-section"><div class="section-heading"><h3>Building schedule</h3><span>ALL FLOORS</span></div><div id="buildingSchedule"></div></section>
+<section class="report-section"><div class="section-heading"><h3>Area &amp; site balance</h3><span>SQUARE FEET</span></div><div id="areaSchedule"></div></section>
+<details id="unitSchedule" class="report-section"><summary>Complete unit area schedule</summary><p class="note">Courtyard wings contain triplexes on Levels 1–3. Outer wings contain duplexes on Levels 2–3 above open parking; the 12 remaining lower L-shaped corners are three-level retail premises. Retained upper positions have one roof duplex across their two highest levels, with apartments below. The two lowest upper tiers are removed to extend the open fourth-floor terraces.</p><div id="unitAreaRows" class="schedule-scroll"></div></details>
+<details class="report-section model-controls"><summary>Model controls &amp; export</summary>
+  <h2>Superblock · IFC Base</h2>
+<div class="sub">Four residential rings plus The Core. A lowered stepped roof above three-level triplex family homes, one open level, four apartment floors. The central corners now join The Core. The seven-foot circulation band is a three-storey valley below and a 12-foot open ring with access galleries above.</div>
+  <section class="section">
+    <h3>BIM workspace</h3>
+    <label class="check"><input id="lockGeometry" type="checkbox" checked> Lock original footprint parameters</label>
+    <div class="row"><label for="bimView">Model view</label><select id="bimView"><option value="source" selected>Massing</option><option value="bim">BIM + stairs</option><option value="slabs">Slabs only</option></select></div>
+    <div class="row"><label for="bimLevel">Level filter</label><select id="bimLevel"><option value="all">All</option><option value="0">Level 01</option><option value="1">Level 02</option><option value="2">Level 03</option></select></div>
+    <label class="check"><input id="groundOutlines" type="checkbox"> Project all source outlines on ground</label>
+    <div class="buttons" style="margin-top:10px"><button class="primary" id="exportIfc">Export IFC4</button><button id="exportJson">Export geometry JSON</button></div>
+    <div id="bimStats" class="sub" style="margin-top:10px"></div>
+    <div id="bimInspect" class="fixed" style="display:block;font-size:11px;line-height:1.6">Select a space in BIM view to inspect it.</div>
+    <details><summary style="font-size:11px">Model notes</summary><div class="sub">Walls are a provisional 0.5′ thick; slabs are 0.75′ thick, contained inside the plan pieces. IFC uses metres and Z up. Source plan X maps to IFC X; source plan Y maps to IFC −Y. IDs persist between exports. Original building boundary lines and wing envelopes retained; missing corner return vertices repaired. Internal unit divisions add no gaps. This is a massing-to-BIM base, not a coordinated or construction-ready model.</div></details>
+  </section>
+  <div class="fixed"><span>Superblock</span><b>660′ × 660′</b></div>
+  <div class="fixed"><span>Double-loaded depth</span><b>65′</b></div><div class="fixed"><span>All-level courtyard shift</span><b>10′ inward</b></div>
+  <div class="fixed"><span>Wing storeys · shortest → longest</span><b></b></div>
+  <div class="fixed"><span>Building A</span><b>3 + void + 4</b></div>
+  <div class="fixed"><span>Building B</span><b>3 + void + 4</b></div>
+  <div class="fixed"><span>Building C</span><b>3 + void + 4</b></div>
+  <div class="fixed"><span>Building D</span><b>3 + void + 4</b></div>
+          <div class="fixed"><span>Cores + L corners · A/B/C/D</span><b>Redlined roof / central Core</b></div>
+  <div class="fixed"><span>Level height</span><b>12′</b></div>
+  <div class="fixed"><span>Outer shell</span><b>28′</b></div>
+  <div class="fixed"><span>Corridor ring</span><b>7′</b></div>
+  <div class="fixed"><span>Inner shell</span><b>28′</b></div>
+  <div class="fixed"><span>Corner circles</span><b>4 per building / 7′ radius</b></div>
+  <div class="fixed"><span>Cut points</span><b>8 per building</b></div>
+  <div class="fixed"><span>Cut lines</span><b>8 per building</b></div>
+  <div class="fixed"><span>Road width</span><b id="roadWidthReadout">36′</b></div>
+
+  <section class="section">
+    <h3>Fixed axis geometry</h3>
+    <div class="fixed"><span>Axis 1 angle</span><b>18.435°</b></div>
+    <div class="fixed"><span>Axis 2 angle</span><b>-71.565°</b></div>
+    <div class="fixed"><span>Edge intersections</span><b>220′ exact</b></div>
+    <div class="sub">Each axis passes through the site center. The four boundary intersections are fixed 220′ from their adjacent corners.</div>
+  </section>
+
+  <section class="section">
+    <h3>Setback + building setup</h3>
+    <div class="row">
+      <label>Block setback</label><output id="oSet"></output>
+      <input id="setback" type="range" min="8" max="40" step="1" value="18">
+    </div>
+    <div class="fixed"><span>Building levels</span><b>One-storey roof steps</b></div>
+    <div class="fixed"><span>Wing heights</span><b>36′ + 12′ void + 48′</b></div>
+    <div class="fixed"><span>Section</span><b>Upper: 6′ cantilever · 12′ open ring · inner units −6′</b></div>
+  </section>
+
+  <section class="section">
+    <h3>Display</h3>
+    <div class="checks">
+      <label class="check"><input id="showAxes" type="checkbox"> Axis centerlines</label>
+      <label class="check"><input id="showRoads" type="checkbox" checked> Pedestrian roads</label>
+      <label class="check"><input id="showRaw" type="checkbox"> Raw 4 blocks</label>
+      <label class="check"><input id="showCourts" type="checkbox" checked> Courtyards</label>
+      <label class="check"><input id="showCorridor" type="checkbox" checked> 7′ corridor ring</label>
+      <label class="check"><input id="showShells" type="checkbox"> Shell overlays</label>
+      <label class="check"><input id="showCuts" type="checkbox"> 7′ circles + cut lines</label>
+      <label class="check"><input id="showBlueCourts" type="checkbox"> Blue courtyard trapezoids</label>
+
+      <label class="check"><input id="showGrid" type="checkbox"> 20′ grid</label>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>Views</h3>
+    <div class="buttons">
+      <button class="primary" id="axon">Axonometric</button>
+      <button id="plan">Plan</button>
+      <button id="low">Low oblique</button>
+      <button id="reset">Reset</button>
+    </div>
+  </section>
+</details>
+<footer class="report-footer"><b>MEMO STUDIO</b> · COMPUTATIONAL DESIGN<br>Concept section only. Triplex homes count once across Levels 1–3. Upper apartments count per floor. Unit areas exclude private-stair openings; circulation and cores are separate. The upper block and 6-foot cantilever require structural design. The 3½-foot galleries are schematic; access and egress widths require review. Egress, fire separation, terrace access and daylight performance require further study.</footer>
+</aside>
+
+<div class="legend"><span><i class="dot" style="background:#c5a187"></i>Triplex homes · L1–3</span><span><i class="dot" style="background:#93b5b1"></i>Apartments + roof duplexes</span><span><i class="dot" style="background:#8f8f8f"></i>Shared cores</span><span><i class="dot" style="background:#bbc9b4"></i>Courtyards</span></div>
+<script type="importmap">
+{
+  "imports":{
+    "three":"/American-Superblock/vendor/three.module.js",
+    "three/addons/":"/American-Superblock/vendor/addons/"
+  }
+}
+</script>
+<script src="/American-Superblock/vendor/polygon-clipping.umd.min.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import {applyEnvelopeDetail} from '/American-Superblock/envelope-detail.js';
+import {applyDaylightFacades} from '/American-Superblock/daylight-facades.js';
+import {classifyUnitEdges,facadeOpenings,FACADE_RULE_VERSION} from '/American-Superblock/facade-opening-rules.js';
+// Solar articulation is paused: use the grid-aligned source geometry in every view.
+const daylightSettings=Object.freeze({enabled:false,maxAngle:0,maxDepth:0});
+import {sharedBoundary,edgeIsShared,addSharedWalls,addRingStairs} from '/American-Superblock/ring-refinement.js';
+import {batchElements,elementFromHit} from '/American-Superblock/render-batches.js';
+window.memoElementFromHit=elementFromHit;
+import {prepareOffices,buildOffices,parkingAccess,officeLabels} from '/American-Superblock/office-corners.js';
+import {openCornerStairs,connectCoreLandings,connectEntryThresholds} from '/American-Superblock/egress-connections.js';
+import {mountGeometryEngine} from '/American-Superblock/geometry-workspace.js';
+import {buildDoorAssemblies} from '/American-Superblock/door-assemblies.js';
+import {enforceUnitEnclosures} from '/American-Superblock/unit-enclosure.js';
+import {circle,buildCircularCore,connectCircularCore} from '/American-Superblock/circular-core.js';
+import {fitChamferCores,addVisibleFrame} from '/American-Superblock/corner-frame.js';
+import {applyVToModel} from '/American-Superblock/v-applied.js';
+import {loftMesh,loftPositions,loftSection} from '/American-Superblock/loft-geometry.js';
+const vSettings={enabled:true,runPerStorey:2,stepFloors:2,transition:25};
+import {applyParkingDuplexSection} from '/American-Superblock/parking-duplex-section.js';
+import {buildRegistry} from '/American-Superblock/bim-registry.js';
+import {mountBimWorkspace} from '/American-Superblock/bim-workspace.js';
+import {applySpecs} from '/American-Superblock/specs-engine.js';
+import {mountSpecsWorkspace} from '/American-Superblock/specs-workspace.js';
+const specsCatalog=await fetch('/American-Superblock/specs-catalog.json').then(r=>{if(!r.ok)throw Error('Specs catalog unavailable');return r.json()}).catch(e=>{console.warn('MEMO specifications library unavailable; architecture remains usable.',e);return {products:[],requirements:[],propertyMap:[],designGaps:[]};});
+import {chooseCornerStair} from '/American-Superblock/stair-corner.js';
+import {mountModelControls,detailLevel} from '/American-Superblock/model-controls.js';
+import {createGerehLayer,createGerehIfcProxies,mountGerehWorkspace} from '/American-Superblock/gereh-entrances.js';
+import {createResidentialPrivacyBuffers} from '/American-Superblock/privacy-protection.js';
+
+const SITE=660, HALF=SITE/2, DONUT_DEPTH=65, COURTYARD_SHIFT=10, LEVEL_HEIGHT=12, BAR_STORIES=3, BAR_HEIGHT=36;
+
+const WING_LEVELS=Array.from({length:4},()=>[8,8,8,8]);
+const state={axis1:18.434948823,axis2:-71.565051177,setback:18,height:LEVEL_HEIGHT};
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xffffff);
+
+const viewSize=()=>{const e=document.getElementById('scene');return {width:e.clientWidth||innerWidth,height:e.clientHeight||innerHeight}};
+const camera=new THREE.PerspectiveCamera(36,viewSize().width/viewSize().height,1,4000);
+camera.position.set(760,360,760);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(viewSize().width,viewSize().height);
+renderer.setPixelRatio(Math.min(devicePixelRatio,1));
+renderer.shadowMap.enabled=true;renderer.localClippingEnabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.03;
+document.getElementById('scene').appendChild(renderer.domElement);
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.target.set(0,40,0);
+controls.minDistance=30;
+controls.maxDistance=1800;
+controls.maxPolarAngle=Math.PI*.495;
+
+scene.add(new THREE.HemisphereLight(0xffffff,0xb8b8b8,1.3));
+const sun=new THREE.DirectionalLight(0xffffff,3.6);
+sun.position.set(-420,720,320);
+sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024);
+renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
+sun.shadow.camera.near=1;sun.shadow.camera.far=2200;
+sun.shadow.bias=-.00012;sun.shadow.normalBias=.12;sun.shadow.radius=2;
+sun.shadow.camera.left=-610;sun.shadow.camera.right=610;
+sun.shadow.camera.top=610;sun.shadow.camera.bottom=-610;
+sun.shadow.camera.updateProjectionMatrix();
+scene.add(sun);
+
+const mats={
+  site:new THREE.MeshStandardMaterial({color:0xeeeee8,roughness:.96}),
+  road:new THREE.MeshStandardMaterial({color:0xdedfd7,roughness:.92}),
+  raw:new THREE.MeshStandardMaterial({color:0xd6c3a4,roughness:.95,transparent:true,opacity:.35}),
+  block:new THREE.MeshStandardMaterial({color:0xebe7df,roughness:.82}),
+  court:new THREE.MeshStandardMaterial({color:0xbbc9b4,roughness:1}),
+  corridor:new THREE.MeshStandardMaterial({color:0x8fb3d1,roughness:.92,transparent:true,opacity:.96}),
+  outerShell:new THREE.MeshStandardMaterial({color:0xd9ccb7,roughness:.98,transparent:true,opacity:.72}),
+  innerShell:new THREE.MeshStandardMaterial({color:0xc7d0b8,roughness:.98,transparent:true,opacity:.72}),
+  cut:new THREE.LineBasicMaterial({color:0xcf3f2f}),
+  cutPoint:new THREE.MeshStandardMaterial({color:0xcf5b42,roughness:.55}),
+  blueCourt:new THREE.LineBasicMaterial({color:0x2b66ff,depthTest:false,transparent:false}),
+  blueCourtPoint:new THREE.MeshStandardMaterial({color:0x2b66ff,roughness:.45,depthTest:false}),
+  corridorEdge:new THREE.LineBasicMaterial({color:0x5d84a6,transparent:true,opacity:.75,depthTest:false}),
+  storyLine:new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.10,depthTest:false}),
+  topEdge:new THREE.LineBasicMaterial({color:0x333333,transparent:true,opacity:.18,depthTest:false}),
+  core:new THREE.MeshStandardMaterial({color:0x8f8f8f,roughness:.9,transparent:true,opacity:.96}),
+  unitOuter:new THREE.MeshStandardMaterial({color:0xd7c0a1,roughness:.95,transparent:true,opacity:.88}),
+  unitInner:new THREE.MeshStandardMaterial({color:0xc8d2bc,roughness:.95,transparent:true,opacity:.88}),
+  unitLine:new THREE.LineBasicMaterial({color:0x2f2a24,depthTest:false}),
+  tree:new THREE.MeshStandardMaterial({color:0x5f7152,roughness:1}),
+  trunk:new THREE.MeshStandardMaterial({color:0x685947,roughness:1}),
+  axis:new THREE.LineBasicMaterial({color:0x5f5a54}),
+  dim:new THREE.LineBasicMaterial({color:0x4a4640}),
+  grid:new THREE.LineBasicMaterial({color:0xc7c1b8,transparent:true,opacity:.45})
+};
+
+const root=new THREE.Group();scene.add(root);
+const siteContext=new THREE.Group();siteContext.name='Landscape / streets / site';scene.add(siteContext);
+
+const site=new THREE.Mesh(new THREE.BoxGeometry(SITE,8,SITE),mats.site);
+site.position.y=-4;site.receiveShadow=true;siteContext.add(site);
+
+const boundaryPts=[
+  new THREE.Vector3(-HALF,.2,-HALF),new THREE.Vector3(HALF,.2,-HALF),
+  new THREE.Vector3(HALF,.2,HALF),new THREE.Vector3(-HALF,.2,HALF),
+  new THREE.Vector3(-HALF,.2,-HALF)
+];
+root.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(boundaryPts),new THREE.LineBasicMaterial({color:0x756f67})));
+
+const gridGroup=new THREE.Group();
+for(let v=-HALF;v<=HALF;v+=20){
+  gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(v,.1,-HALF),new THREE.Vector3(v,.1,HALF)]),mats.grid));
+  gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-HALF,.1,v),new THREE.Vector3(HALF,.1,v)]),mats.grid));
+}
+gridGroup.visible=false;root.add(gridGroup);
+
+const rawGroup=new THREE.Group(), roadGroup=new THREE.Group(), blockGroup=new THREE.Group(), pieceGroup=new THREE.Group(), coreGroup=new THREE.Group(), unitGroup=new THREE.Group(), courtGroup=new THREE.Group(), corridorGroup=new THREE.Group(), shellGroup=new THREE.Group(), cutGroup=new THREE.Group(), blueCourtGroup=new THREE.Group(), axisGroup=new THREE.Group();
+root.add(rawGroup,roadGroup,blockGroup,pieceGroup,coreGroup,unitGroup,courtGroup,corridorGroup,shellGroup,cutGroup,blueCourtGroup,axisGroup);
+pieceGroup.visible=false;
+const edgePointGroup=new THREE.Group();
+root.add(edgePointGroup);
+
+function addEdgePoint(x,z){
+  const p=new THREE.Mesh(
+    new THREE.SphereGeometry(4.2,18,18),
+    new THREE.MeshStandardMaterial({color:0xd6452f,roughness:.5})
+  );
+  p.position.set(x,4,z);
+  p.castShadow=true;
+  edgePointGroup.add(p);
+}
+
+
+function clear(g){while(g.children.length)g.remove(g.children[0]);}
+
+function polygonArea(poly){
+  let a=0;
+  for(let i=0;i<poly.length;i++){
+    const p=poly[i],q=poly[(i+1)%poly.length];
+    a+=p.x*q.y-q.x*p.y;
+  }
+  return a/2;
+}
+function ensureCCW(poly){return polygonArea(poly)<0?[...poly].reverse():[...poly];}
+
+function clipByLine(poly,n,keepPositive){
+  const out=[];
+  for(let i=0;i<poly.length;i++){
+    const a=poly[i],b=poly[(i+1)%poly.length];
+    const da=n.dot(a),db=n.dot(b);
+    const ina=keepPositive?da>=-1e-8:da<=1e-8;
+    const inb=keepPositive?db>=-1e-8:db<=1e-8;
+
+    if(ina&&inb)out.push(b.clone());
+    else if(ina&&!inb){
+      const t=da/(da-db);
+      out.push(a.clone().lerp(b,t));
+    }else if(!ina&&inb){
+      const t=da/(da-db);
+      out.push(a.clone().lerp(b,t));
+      out.push(b.clone());
+    }
+  }
+  return out;
+}
+
+function lineIntersect(a1,a2,b1,b2){
+  const dax=a2.x-a1.x,day=a2.y-a1.y;
+  const dbx=b2.x-b1.x,dby=b2.y-b1.y;
+  const den=dax*dby-day*dbx;
+  if(Math.abs(den)<1e-8)return null;
+  const t=((b1.x-a1.x)*dby-(b1.y-a1.y)*dbx)/den;
+  return new THREE.Vector2(a1.x+t*dax,a1.y+t*day);
+}
+
+function offsetConvex(poly,dist){
+  poly=ensureCCW(poly);
+  const shifted=[];
+  for(let i=0;i<poly.length;i++){
+    const a=poly[i],b=poly[(i+1)%poly.length];
+    const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy);
+    if(L<1e-7)continue;
+    const nx=-dy/L,ny=dx/L;
+    shifted.push([
+      new THREE.Vector2(a.x+nx*dist,a.y+ny*dist),
+      new THREE.Vector2(b.x+nx*dist,b.y+ny*dist)
+    ]);
+  }
+  const out=[];
+  for(let i=0;i<shifted.length;i++){
+    const prev=shifted[(i-1+shifted.length)%shifted.length];
+    const cur=shifted[i];
+    const p=lineIntersect(prev[0],prev[1],cur[0],cur[1]);
+    if(p)out.push(p);
+  }
+  return out;
+}
+
+function shapeMesh(poly,y,mat){
+  poly=ensureCCW(poly);
+  const shape=new THREE.Shape();
+  poly.forEach((p,i)=>{
+    const x=p.x,z=-p.y;
+    if(i===0)shape.moveTo(x,z);else shape.lineTo(x,z);
+  });
+  shape.closePath();
+  const g=new THREE.ShapeGeometry(shape);
+  g.rotateX(-Math.PI/2);
+  const m=new THREE.Mesh(g,mat);
+  m.position.y=y;m.receiveShadow=true;
+  return m;
+}
+
+function extrudeMesh(poly, baseY, height, mat){
+  poly=ensureCCW(poly);
+  const shape=new THREE.Shape();
+  poly.forEach((p,i)=>{
+    const x=p.x,z=-p.y;
+    if(i===0)shape.moveTo(x,z);else shape.lineTo(x,z);
+  });
+  shape.closePath();
+  const g=new THREE.ExtrudeGeometry(shape,{depth:height,bevelEnabled:false,steps:1});
+  g.rotateX(-Math.PI/2);
+  g.translate(0, baseY, 0);
+  const m=new THREE.Mesh(g,mat);
+  m.castShadow=true; m.receiveShadow=true;
+  return m;
+}
+
+function addStoryLines(poly, baseY, group,stories=BAR_STORIES){
+  poly=ensureCCW(poly);
+  for(let k=1;k<stories;k++){
+    const y = baseY + LEVEL_HEIGHT*k;
+    const pts = poly.map(p=>new THREE.Vector3(p.x,y,p.y));
+    pts.push(new THREE.Vector3(poly[0].x,y,poly[0].y));
+    const g = new THREE.BufferGeometry().setFromPoints(pts);
+    const line = new THREE.Line(g, mats.storyLine);
+    line.renderOrder = 997;
+    group.add(line);
+  }
+}
+
+function addTopOutline(poly, y, group){
+  poly = ensureCCW(poly);
+  const pts = poly.map(p=>new THREE.Vector3(p.x,y,p.y));
+  pts.push(new THREE.Vector3(poly[0].x,y,poly[0].y));
+  const g = new THREE.BufferGeometry().setFromPoints(pts);
+  const line = new THREE.Line(g, mats.topEdge);
+  line.renderOrder = 998;
+  group.add(line);
+}
+
+function ringMesh(outer,inner,h){
+  outer=ensureCCW(outer);
+  inner=ensureCCW(inner).reverse();
+
+  const shape=new THREE.Shape();
+  outer.forEach((p,i)=>{
+    const x=p.x,z=-p.y;
+    if(i===0)shape.moveTo(x,z);else shape.lineTo(x,z);
+  });
+  shape.closePath();
+
+  const hole=new THREE.Path();
+  inner.forEach((p,i)=>{
+    const x=p.x,z=-p.y;
+    if(i===0)hole.moveTo(x,z);else hole.lineTo(x,z);
+  });
+  hole.closePath();
+  shape.holes.push(hole);
+
+  const g=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false});
+  g.rotateX(-Math.PI/2);
+  const m=new THREE.Mesh(g,mats.block);
+  m.castShadow=true;m.receiveShadow=true;
+  return m;
+}
+
+function centroid(poly){
+  let x=0,y=0;
+  poly.forEach(p=>{x+=p.x;y+=p.y});
+  return new THREE.Vector2(x/poly.length,y/poly.length);
+}
+
+function orderPolygonByCentroid(poly){
+  const c = centroid(poly);
+  const ordered = poly.map(p=>p.clone()).sort((a,b)=>{
+    const aa = Math.atan2(a.y-c.y, a.x-c.x);
+    const bb = Math.atan2(b.y-c.y, b.x-c.x);
+    return aa - bb;
+  });
+  return ensureCCW(ordered);
+}
+
+function closestPointOnSegment(p,a,b){
+  const ab=b.clone().sub(a);
+  const ab2=ab.lengthSq();
+  if(ab2<1e-9) return {point:a.clone(), t:0, dist2:p.distanceToSquared(a)};
+  let t=p.clone().sub(a).dot(ab)/ab2;
+  t=Math.max(0,Math.min(1,t));
+  const q=a.clone().add(ab.multiplyScalar(t));
+  return {point:q,t,dist2:p.distanceToSquared(q)};
+}
+
+function nearestPointOnPolygon(poly,p){
+  let best=null;
+  for(let i=0;i<poly.length;i++){
+    const a=poly[i], b=poly[(i+1)%poly.length];
+    const hit=closestPointOnSegment(p,a,b);
+    if(!best || hit.dist2<best.dist2){
+      best={point:hit.point, t:hit.t, dist2:hit.dist2, edgeIndex:i, a:a.clone(), b:b.clone()};
+    }
+  }
+  return best;
+}
+
+function lineSegmentIntersectionInfinite(p,dir,a,b){
+  const s=b.clone().sub(a);
+  const den = dir.x*s.y - dir.y*s.x;
+  if(Math.abs(den)<1e-8) return null;
+  const ap = a.clone().sub(p);
+  const t = (ap.x*s.y - ap.y*s.x)/den;
+  const u = (ap.x*dir.y - ap.y*dir.x)/den;
+  if(u < -1e-8 || u > 1+1e-8) return null;
+  return {t, point:p.clone().add(dir.clone().multiplyScalar(t))};
+}
+
+function linePolygonHits(poly,p,dir){
+  const hits=[];
+  for(let i=0;i<poly.length;i++){
+    const a=poly[i], b=poly[(i+1)%poly.length];
+    const hit=lineSegmentIntersectionInfinite(p,dir,a,b);
+    if(hit){
+      if(!hits.some(h=>Math.abs(h.t-hit.t)<1e-5)){
+        hits.push(hit);
+      }
+    }
+  }
+  hits.sort((a,b)=>a.t-b.t);
+  return hits;
+}
+
+function addCutCircle(center,r,y=12.22){
+  const pts=[];
+  const seg=48;
+  for(let i=0;i<=seg;i++){
+    const a=Math.PI*2*i/seg;
+    pts.push(new THREE.Vector3(center.x + Math.cos(a)*r, y, center.y + Math.sin(a)*r));
+  }
+  const geom=new THREE.BufferGeometry().setFromPoints(pts);
+  const line=new THREE.Line(geom,mats.cut);
+  cutGroup.add(line);
+}
+
+function addCutDot(p,y=12.24,s=1.8){
+  const m=new THREE.Mesh(new THREE.SphereGeometry(s,12,12),mats.cutPoint);
+  m.position.set(p.x,y,p.y);
+  m.castShadow=false;
+  cutGroup.add(m);
+}
+
+function addCutLine(a,b,y=12.26){
+  const pts=[new THREE.Vector3(a.x,y,a.y),new THREE.Vector3(b.x,y,b.y)];
+  const geom=new THREE.BufferGeometry().setFromPoints(pts);
+  cutGroup.add(new THREE.Line(geom,mats.cut));
+}
+
+
+function addPlanOutline(poly,y,mat,group){
+  const p = ensureCCW(poly);
+  const pts = p.map(v=>new THREE.Vector3(v.x,y,v.y));
+  pts.push(new THREE.Vector3(p[0].x,y,p[0].y));
+  const geom = new THREE.BufferGeometry().setFromPoints(pts);
+  const line = new THREE.Line(geom,mat);
+  line.renderOrder = 995;
+  group.add(line);
+}
+
+function addBlueCourtOutline(poly,y=0.96){
+  poly = orderPolygonByCentroid(poly);
+
+  const pts = poly.map(p=>new THREE.Vector3(p.x,y,p.y));
+  pts.push(new THREE.Vector3(poly[0].x,y,poly[0].y));
+
+  const geom = new THREE.BufferGeometry().setFromPoints(pts);
+  const line = new THREE.Line(geom,mats.blueCourt);
+  line.renderOrder = 999;
+  blueCourtGroup.add(line);
+
+  poly.forEach(p=>{
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(2.4,12,12),mats.blueCourtPoint);
+    dot.position.set(p.x,y+0.015,p.y);
+    dot.renderOrder = 1000;
+    dot.castShadow = false;
+    blueCourtGroup.add(dot);
+  });
+}
+
+function cleanPoly(poly,eps=1e-4){
+  if(!poly || poly.length<2) return [];
+  const out=[];
+  for(const p of poly){
+    if(!out.length || out[out.length-1].distanceToSquared(p)>eps*eps) out.push(p.clone());
+  }
+  if(out.length>1 && out[0].distanceToSquared(out[out.length-1])<eps*eps) out.pop();
+  return out;
+}
+
+function scalePolyAboutCenter(poly,factor){
+  const p=cleanPoly(poly);
+  if(p.length<3) return p;
+  const c=centroid(p);
+  return p.map(v=>c.clone().add(v.clone().sub(c).multiplyScalar(factor)));
+}
+
+function scalePolyAboutAnchor(poly,anchorPt,factor){
+  const p=cleanPoly(poly);
+  if(p.length<3) return p;
+  return p.map(v=>anchorPt.clone().add(v.clone().sub(anchorPt).multiplyScalar(factor)));
+}
+
+function translatePoly(poly,vec){
+  const p=cleanPoly(poly);
+  return p.map(v=>v.clone().add(vec));
+}
+
+function locatePointOnPolygon(poly,p){
+  let best=null, per=0;
+  const edgeLens=[];
+  for(let i=0;i<poly.length;i++){
+    const a=poly[i], b=poly[(i+1)%poly.length];
+    const L=a.distanceTo(b); edgeLens.push(L); per+=L;
+  }
+  const cum=[0];
+  for(let i=0;i<edgeLens.length;i++) cum.push(cum[i]+edgeLens[i]);
+  for(let i=0;i<poly.length;i++){
+    const a=poly[i], b=poly[(i+1)%poly.length];
+    const ab=b.clone().sub(a), ab2=ab.lengthSq();
+    let t=0;
+    if(ab2>1e-9) t=Math.max(0,Math.min(1,p.clone().sub(a).dot(ab)/ab2));
+    const q=a.clone().add(ab.multiplyScalar(t));
+    const d2=q.distanceToSquared(p);
+    if(!best || d2<best.d2) best={edgeIndex:i,t,d2,s:cum[i]+edgeLens[i]*t};
+  }
+  best.perimeter=per; best.cum=cum; return best;
+}
+
+function boundaryPathCCW(poly,a,b){
+  poly=ensureCCW(cleanPoly(poly));
+  const la=locatePointOnPolygon(poly,a), lb=locatePointOnPolygon(poly,b);
+  const per=la.perimeter;
+  let sa=la.s, sb=lb.s;
+  if(sb<sa) sb+=per;
+  const out=[a.clone()];
+  let edge=la.edgeIndex, guard=0;
+  while(guard<poly.length+2){
+    let edgeEndS=la.cum[edge+1];
+    if(edgeEndS<sa) edgeEndS+=per;
+    if(edgeEndS<sb-1e-6){
+      out.push(poly[(edge+1)%poly.length].clone());
+      edge=(edge+1)%poly.length;
+      guard++;
+    } else break;
+  }
+  out.push(b.clone());
+  return cleanPoly(out);
+}
+
+function polylineLength(pts){
+  let L=0;
+  for(let i=1;i<pts.length;i++) L += pts[i].distanceTo(pts[i-1]);
+  return L;
+}
+
+function shortestBoundaryPath(poly,a,b){
+  const p1 = boundaryPathCCW(poly,a,b);
+  const p2 = boundaryPathCCW(poly,b,a).slice().reverse();
+  return polylineLength(p1) <= polylineLength(p2) ? p1 : p2;
+}
+
+function planPieceMesh(poly,y,colorHex){
+  poly=ensureCCW(cleanPoly(poly));
+  if(!poly || poly.length<3) return null;
+  return shapeMesh(poly,y,new THREE.MeshStandardMaterial({color:colorHex,roughness:.92,transparent:true,opacity:.92}));
+}
+
+function interiorAngleDeg(prev,v,next){
+  const a = prev.clone().sub(v).normalize();
+  const b = next.clone().sub(v).normalize();
+  const dot = Math.max(-1, Math.min(1, a.dot(b)));
+  return Math.acos(dot) * 180 / Math.PI;
+}
+
+function addNinetyDegreeCores(courtyardPoly, depth=28, y=LEVEL_HEIGHT+0.24){
+  const poly = ensureCCW(cleanPoly(courtyardPoly));
+  const candidates = [];
+
+  for(let i=0;i<poly.length;i++){
+    const prev = poly[(i-1+poly.length)%poly.length].clone();
+    const v = poly[i].clone();
+    const next = poly[(i+1)%poly.length].clone();
+
+    const ang = interiorAngleDeg(prev, v, next);
+
+    // For the INNER courtyard, go OUTWARD into the inner shell,
+    // so reverse the adjacent edge directions.
+    const d1 = v.clone().sub(prev).normalize();
+    const d2 = v.clone().sub(next).normalize();
+
+    const score = Math.abs(ang - 90);
+    candidates.push({i, prev, v, next, ang, d1, d2, score});
+  }
+
+  // Keep only the 2 inner courtyard corners closest to 90°.
+  candidates.sort((a,b)=>a.score-b.score);
+  const chosen = candidates.slice(0,2);
+
+  chosen.forEach(c=>{
+    const p0 = c.v.clone();
+    const p1 = c.v.clone().add(c.d1.clone().multiplyScalar(depth));
+    const p2 = c.v.clone().add(c.d1.clone().multiplyScalar(depth)).add(c.d2.clone().multiplyScalar(depth));
+    const p3 = c.v.clone().add(c.d2.clone().multiplyScalar(depth));
+    const corePoly = cleanPoly([p0,p1,p2,p3]);
+
+    const mesh = shapeMesh(corePoly, y, mats.core);
+    if(mesh){
+      mesh.renderOrder = 996;
+      coreGroup.add(mesh);
+
+      const coreEdgeMat = new THREE.LineBasicMaterial({color:0x666666,depthTest:false});
+      addPlanOutline(corePoly, y+0.02, coreEdgeMat, coreGroup);
+    }
+  });
+}
+
+function addUnitCell(poly, mat, y){
+  poly = cleanPoly(poly);
+  if(poly.length < 3) return;
+  const mesh = shapeMesh(poly, y, mat);
+  mesh.renderOrder = 994;
+  unitGroup.add(mesh);
+}
+
+function matchingEdge(poly, refA, refB){
+  const p = ensureCCW(cleanPoly(poly));
+  const refDir = refB.clone().sub(refA).normalize();
+  const refMid = refA.clone().add(refB).multiplyScalar(0.5);
+  let best = null;
+
+  for(let i=0;i<p.length;i++){
+    let a = p[i].clone();
+    let b = p[(i+1)%p.length].clone();
+    let dir = b.clone().sub(a).normalize();
+    const parallelPenalty = 1 - Math.abs(dir.dot(refDir));
+    const mid = a.clone().add(b).multiplyScalar(0.5);
+    const distancePenalty = mid.distanceTo(refMid) / 500;
+    const score = parallelPenalty * 10 + distancePenalty;
+
+    if(!best || score < best.score){
+      // Orient every matched edge in the same direction as the courtyard edge.
+      if(dir.dot(refDir) < 0){
+        const tmp = a; a = b; b = tmp;
+        dir = b.clone().sub(a).normalize();
+      }
+      best = {a,b,score};
+    }
+  }
+  return best;
+}
+
+function addWingUnits(outerPoly, corridorOuterPoly, corridorInnerPoly, courtyardPoly){
+  const outer = ensureCCW(cleanPoly(outerPoly));
+  const co = ensureCCW(cleanPoly(corridorOuterPoly));
+  const ci = ensureCCW(cleanPoly(corridorInnerPoly));
+  const court = ensureCCW(cleanPoly(courtyardPoly));
+  if(outer.length!==4 || co.length!==4 || ci.length!==4 || court.length!==4) return;
+
+  // Build each wing from the COURTYARD EDGE outward, matching only parallel edges.
+  const wings = [];
+  for(let i=0;i<4;i++){
+    const q0 = court[i].clone();
+    const q1 = court[(i+1)%4].clone();
+
+    const ciEdge = matchingEdge(ci, q0, q1);
+    const coEdge = matchingEdge(co, q0, q1);
+    const oEdge  = matchingEdge(outer, q0, q1);
+    if(!ciEdge || !coEdge || !oEdge) continue;
+
+    const lenAvg = (
+      q0.distanceTo(q1) +
+      ciEdge.a.distanceTo(ciEdge.b) +
+      coEdge.a.distanceTo(coEdge.b) +
+      oEdge.a.distanceTo(oEdge.b)
+    ) / 4;
+
+    wings.push({
+      i,
+      len: lenAvg,
+      q0, q1,
+      ci0:ciEdge.a, ci1:ciEdge.b,
+      co0:coEdge.a, co1:coEdge.b,
+      o0:oEdge.a, o1:oEdge.b
+    });
+  }
+
+  // Rank actual wing lengths: largest 4, second 3, third 2, smallest 1.
+  const ranked = wings.slice().sort((a,b)=>b.len-a.len);
+  const targetCounts = [4,3,2,1];
+  ranked.forEach((w,rank)=>w.count = targetCounts[rank] || 1);
+
+  wings.forEach(w=>{
+    const n = w.count || 1;
+
+    for(let j=0;j<n;j++){
+      const t0 = j / n;
+      const t1 = (j+1) / n;
+
+      // OUTER-SIDE unit: facade -> outer corridor edge.
+      const oA  = w.o0.clone().lerp(w.o1,t0);
+      const oB  = w.o0.clone().lerp(w.o1,t1);
+      const coA = w.co0.clone().lerp(w.co1,t0);
+      const coB = w.co0.clone().lerp(w.co1,t1);
+
+      // INNER-SIDE unit: inner corridor edge -> courtyard wall.
+      const ciA = w.ci0.clone().lerp(w.ci1,t0);
+      const ciB = w.ci0.clone().lerp(w.ci1,t1);
+      const qA  = w.q0.clone().lerp(w.q1,t0);
+      const qB  = w.q0.clone().lerp(w.q1,t1);
+
+      // Closed unit polygons. No point is connected to another wing.
+      addUnitCell([oA,oB,coB,coA], mats.unitOuter, LEVEL_HEIGHT+0.16);
+      addUnitCell([ciA,ciB,qB,qA], mats.unitInner, LEVEL_HEIGHT+0.18);
+    }
+  });
+}
+
+const OUTER_SEG_COLORS=[0xcf9f7a,0xead1b6,0xcf9f7a,0xead1b6,0xcf9f7a,0xead1b6,0xcf9f7a,0xead1b6];
+const CORRIDOR_SEG_COLORS=[0x6f98ba,0x7fa8c8,0x5f89ad,0x8ab1cf,0x719cbd,0x628caf,0x86accb,0x769fbe];
+const INNER_SEG_COLORS=[0x9fb488,0xd9e4cb,0x9fb488,0xd9e4cb,0x9fb488,0xd9e4cb,0x9fb488,0xd9e4cb];
+const OUTER_BAR_COLOR=0x93b5b1;
+const OUTER_CORNER_COLOR=0xcc8f9b;
+const INNER_BAR_COLOR=0x93b5b1;
+const INNER_CORNER_COLOR=0xb8cd98;
+
+
+function addTree(x,z,s=.9){
+  const g=new THREE.Group();
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(1.4*s,1.7*s,9*s,8),mats.trunk);
+  trunk.position.y=4.5*s;g.add(trunk);
+  const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(6.4*s,1),mats.tree);
+  crown.position.y=11.6*s;crown.scale.set(1,.82,1);crown.castShadow=true;g.add(crown);
+  g.position.set(x,0,z);courtGroup.add(g);
+}
+
+function angleNormal(deg){
+  const a=THREE.MathUtils.degToRad(deg);
+  return new THREE.Vector2(-Math.sin(a),Math.cos(a));
+}
+
+function addAxisLine(deg){
+  const a=THREE.MathUtils.degToRad(deg),L=1000;
+  const d=new THREE.Vector3(Math.cos(a),0,Math.sin(a));
+  const pts=[d.clone().multiplyScalar(-L),d.clone().multiplyScalar(L)];
+  pts[0].y=2.0;pts[1].y=2.0;
+  axisGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mats.axis));
+}
+
+function makeRoadPolygon(raw,inset){
+  // Road zone belonging to one quadrant = raw polygon with inset polygon as a hole.
+  raw=ensureCCW(raw);
+  inset=ensureCCW(inset).reverse();
+
+  const shape=new THREE.Shape();
+  raw.forEach((p,i)=>{
+    if(i===0)shape.moveTo(p.x,-p.y);else shape.lineTo(p.x,-p.y);
+  });
+  shape.closePath();
+
+  const hole=new THREE.Path();
+  inset.forEach((p,i)=>{
+    if(i===0)hole.moveTo(p.x,-p.y);else hole.lineTo(p.x,-p.y);
+  });
+  hole.closePath();
+  shape.holes.push(hole);
+
+  const geo=new THREE.ShapeGeometry(shape);
+  geo.rotateX(-Math.PI/2);
+  const mesh=new THREE.Mesh(geo,mats.road);
+  mesh.position.y=.45;
+  mesh.receiveShadow=true;
+  return mesh;
+}
+
+function build(){
+  bimBuildings.length=0; bimPieces.length=0;
+  clear(rawGroup);clear(roadGroup);clear(blockGroup);clear(pieceGroup);clear(coreGroup);clear(unitGroup);clear(courtGroup);clear(corridorGroup);clear(shellGroup);clear(cutGroup);clear(blueCourtGroup);clear(axisGroup);
+
+  addAxisLine(state.axis1);
+  addAxisLine(state.axis2);
+
+  const square=[
+    new THREE.Vector2(-HALF,-HALF),
+    new THREE.Vector2(HALF,-HALF),
+    new THREE.Vector2(HALF,HALF),
+    new THREE.Vector2(-HALF,HALF)
+  ];
+
+  const n1=angleNormal(state.axis1);
+  const n2=angleNormal(state.axis2);
+
+  const combos=[
+    [true,true],
+    [false,true],
+    [false,false],
+    [true,false]
+  ];
+
+  combos.forEach((combo,idx)=>{
+    let raw=square.map(p=>p.clone());
+    raw=clipByLine(raw,n1,combo[0]);
+    raw=clipByLine(raw,n2,combo[1]);
+    if(raw.length<3)return;
+
+    raw=ensureCCW(raw);
+    rawGroup.add(shapeMesh(raw,.25,mats.raw));
+
+    const inset=offsetConvex(raw,state.setback+COURTYARD_SHIFT);
+    if(!inset||inset.length<3)return;
+
+    // pedestrian roads are the setback zones between raw polygon edges and inset polygon
+    roadGroup.add(makeRoadPolygon(raw,inset));
+
+    // 75' section; outer facade and valley unchanged; courtyard moves inward 10 feet.
+    // 29 ft outer bar + 7 ft valley + 39 ft courtyard bar = 75 ft
+    const corridorOuter=offsetConvex(inset,29);
+    const corridorInner=offsetConvex(inset,36);
+    const courtyardRaw=offsetConvex(inset,DONUT_DEPTH);
+    if(!corridorOuter||!corridorInner||!courtyardRaw)return;
+    if(corridorOuter.length<3||corridorInner.length<3||courtyardRaw.length<3)return;
+
+    // Rebuild the courtyard polygon from the actual 4 vertices in centroid order.
+    const courtyard = orderPolygonByCentroid(courtyardRaw);
+
+    bimBuildings.push({occupiedRingShiftFt:COURTYARD_SHIFT,id:`B${idx+1}`,name:String.fromCharCode(65+idx),wingLevels:WING_LEVELS[idx],levels:Math.max(...WING_LEVELS[idx]),corridorOuter:corridorOuter.map(p=>[p.x,p.y]),corridorInner:corridorInner.map(p=>[p.x,p.y]),outer:inset.map(p=>[p.x,p.y]),courtyard:courtyard.map(p=>[p.x,p.y])});
+    // Do not show continuous ring masses here; the actual geometry will be rebuilt
+    // below from separated outer-ring and inner-ring pieces.
+
+    // Plan overlays on top of the separated massing:
+    // outer shell / corridor edges / inner shell.
+    const outerShellRing=ringMesh(inset,corridorOuter,0.18);
+    outerShellRing.position.y=LEVEL_HEIGHT+0.05;
+    outerShellRing.material=mats.outerShell;
+    outerShellRing.castShadow=false;
+    outerShellRing.receiveShadow=true;
+    shellGroup.add(outerShellRing);
+
+    // Corridor is intentionally left as a VOID; do not fill it.
+    // Show only the two corridor boundary lines.
+    addPlanOutline(corridorOuter, LEVEL_HEIGHT+0.405, mats.corridorEdge, corridorGroup);
+    addPlanOutline(corridorInner, LEVEL_HEIGHT+0.405, mats.corridorEdge, corridorGroup);
+
+    const innerShellRing=ringMesh(corridorInner,courtyard,0.18);
+    innerShellRing.position.y=LEVEL_HEIGHT+0.11;
+    innerShellRing.material=mats.innerShell;
+    innerShellRing.castShadow=false;
+    innerShellRing.receiveShadow=true;
+    shellGroup.add(innerShellRing);
+
+    // 2 gray cores at the 90° building corners only.
+    addNinetyDegreeCores(courtyard, 28, LEVEL_HEIGHT+0.24);
+
+    courtGroup.add(shapeMesh(courtyard,.9,mats.court));
+    addBlueCourtOutline(courtyard);
+
+    // EXACT CORNER-CUT RULE with centroid-corrected outward normals:
+    const courtCCW = orderPolygonByCentroid(courtyard);
+    const courtCentroid = centroid(courtCCW);
+    const cutDatas = [];
+    const cornerCutPairs = [];
+
+    for(let i=0;i<courtCCW.length;i++){
+      const prev = courtCCW[(i-1+courtCCW.length)%courtCCW.length].clone();
+      const corner = courtCCW[i].clone();
+      const next = courtCCW[(i+1)%courtCCW.length].clone();
+
+      addCutCircle(corner,7);
+
+      const edgeData = [
+        { kind:'prev', marker: corner.clone().add(prev.clone().sub(corner).normalize().multiplyScalar(Math.min(7, prev.distanceTo(corner)))), edgeStart: prev.clone(), edgeEnd: corner.clone() },
+        { kind:'next', marker: corner.clone().add(next.clone().sub(corner).normalize().multiplyScalar(Math.min(7, next.distanceTo(corner)))), edgeStart: corner.clone(), edgeEnd: next.clone() }
+      ];
+
+      const pair = {corner:corner.clone(), prev:null, next:null};
+
+      edgeData.forEach(data=>{
+        const marker = data.marker.clone();
+        addCutDot(marker);
+
+        const edgeDir = data.edgeEnd.clone().sub(data.edgeStart).normalize();
+        let n1 = new THREE.Vector2(edgeDir.y, -edgeDir.x);
+        let n2 = n1.clone().multiplyScalar(-1);
+        const away = marker.clone().sub(courtCentroid);
+        let cutDir = (n1.dot(away) >= n2.dot(away)) ? n1 : n2;
+        cutDir.normalize();
+
+        const hitPoly = (poly)=>{
+          const hits = linePolygonHits(poly, marker, cutDir).filter(h=>h.t>1e-6).sort((a,b)=>a.t-b.t);
+          return hits.length ? hits[0].point.clone() : marker.clone();
+        };
+
+        const ci = hitPoly(corridorInner);
+        const co = hitPoly(corridorOuter);
+        const outer = hitPoly(inset);
+        const rec = { marker:marker.clone(), ci, co, outer, angle:Math.atan2(marker.y-courtCentroid.y, marker.x-courtCentroid.x) };
+
+        cutDatas.push(rec);
+        pair[data.kind] = rec;
+        addCutLine(marker, outer);
+      });
+
+      cornerCutPairs.push(pair);
+    }
+
+    cutDatas.sort((a,b)=>a.angle-b.angle);
+
+    function addExplicitOuterCornerUnits(outerPoly, innerPoly, colors, y, opts={}){
+      const cornerHeight = opts.cornerHeight || LEVEL_HEIGHT;
+      const translateDist = opts.translateDist || 0;
+      const group = opts.group || pieceGroup;
+      cornerCutPairs.forEach((pair, cornerIdx)=>{
+        if(!pair.prev || !pair.next) return;
+        const outerPath = shortestBoundaryPath(outerPoly, pair.prev.outer, pair.next.outer);
+        const innerPath = shortestBoundaryPath(innerPoly, pair.prev.co, pair.next.co).slice().reverse();
+        let piece = cleanPoly(outerPath.concat(innerPath));
+        if(piece.length < 3) return;
+        if(translateDist>0){
+          const pc = centroid(piece);
+          let outward = pc.clone().sub(courtCentroid);
+          if(outward.lengthSq() < 1e-8) outward = new THREE.Vector2(1,0);
+          outward.normalize().multiplyScalar(translateDist);
+          piece = translatePoly(piece, outward);
+        }
+        const mat = new THREE.MeshStandardMaterial({color:OUTER_CORNER_COLOR,roughness:.9,transparent:false,opacity:1});
+        const mesh = extrudeMesh(piece,0,cornerHeight,mat);
+        group.add(mesh);
+        capturePiece(idx,'outer-corner',cornerIdx,piece,cornerHeight);
+        addUnitEdges(piece,0,cornerHeight,group);
+        addStoryLines(piece,0,group,cornerHeight/LEVEL_HEIGHT);
+      });
+    }
+
+    function addPlanPieces(outerPoly, innerPoly, outerKey, innerKey, colors, y, opts={}){
+      const extrudeBars = !!opts.extrudeBars;
+      const extrudeCorners = !!opts.extrudeCorners;
+      const cornerScale = opts.cornerScale || 1;
+      const cornerTranslate = opts.cornerTranslate || 0;
+      const barScale = opts.barScale || 1;
+      const cornerHeight = opts.cornerHeight || LEVEL_HEIGHT;
+
+      const outerLoop = ensureCCW(cleanPoly(outerPoly));
+      const innerLoop = ensureCCW(cleanPoly(innerPoly));
+      const orderedCuts = cutDatas.slice().sort((a,b)=>{
+        const sa = locatePointOnPolygon(outerLoop, a[outerKey]).s;
+        const sb = locatePointOnPolygon(outerLoop, b[outerKey]).s;
+        return sa - sb;
+      });
+      const n = orderedCuts.length;
+      // Rank the four paired wings by their common courtyard-side length.
+      const rankedWings=orderedCuts.map((a,i)=>({a,b:orderedCuts[(i+1)%n]}))
+        .filter(w=>boundaryPathCCW(outerLoop,w.a[outerKey],w.b[outerKey]).length===2)
+        .sort((u,v)=>u.a.marker.distanceTo(u.b.marker)-v.a.marker.distanceTo(v.b.marker));
+      const wingRanks=new Map(rankedWings.map((w,i)=>[w.a,i+1]));
+
+      for(let i=0;i<n;i++){
+        const j=(i+1)%n;
+        const a = orderedCuts[i];
+        const b = orderedCuts[j];
+
+        const outerPath = boundaryPathCCW(outerLoop, a[outerKey], b[outerKey]);
+
+        // Ring-order classification: bars stay on one side, corners pass a polygon vertex.
+        const isCornerPiece = outerPath.length > 2;
+        const isBarPiece = !isCornerPiece;
+
+        const innerForward = boundaryPathCCW(innerLoop, a[innerKey], b[innerKey]);
+        const innerBack = innerForward.slice().reverse();
+        let piece = cleanPoly(outerPath.concat(innerBack));
+
+        if(piece.length>=3){
+          let drawPiece=piece;
+
+          if(isCornerPiece && cornerTranslate>0){
+            const pc = centroid(drawPiece);
+            let outward = pc.clone().sub(courtCentroid);
+            if(outward.lengthSq() < 1e-8) outward = new THREE.Vector2(1,0);
+            outward.normalize().multiplyScalar(cornerTranslate);
+            drawPiece = translatePoly(drawPiece, outward);
+          } else if(isCornerPiece && cornerScale<1){
+            let anchorPt = outerPath[0].clone();
+            let maxD = -Infinity;
+            outerPath.forEach(p=>{
+              const d = p.distanceToSquared(courtCentroid);
+              if(d > maxD){ maxD=d; anchorPt=p.clone(); }
+            });
+            drawPiece = scalePolyAboutAnchor(drawPiece, anchorPt, cornerScale);
+          }
+
+          if(isBarPiece && barScale<1) drawPiece=scalePolyAboutCenter(drawPiece,barScale);
+
+          const isInnerCorner=outerKey==='ci' && isCornerPiece;
+          const cornerAngle=isInnerCorner?interiorAngleDeg(outerPath[0],outerPath[1],outerPath[2]):0;
+
+          const isCore=isInnerCorner;
+          const doExtrude = (isBarPiece && extrudeBars) || (isCornerPiece && extrudeCorners);
+          if(doExtrude){
+            const height = isBarPiece ? WING_LEVELS[idx][wingRanks.get(a)-1]*LEVEL_HEIGHT : isCore ? Math.max(...WING_LEVELS[idx])*LEVEL_HEIGHT : cornerHeight;
+            let pieceColor = colors[i % colors.length];
+            if(outerKey==='outer') pieceColor = isCornerPiece ? OUTER_CORNER_COLOR : OUTER_BAR_COLOR;
+            else if(outerKey==='ci') pieceColor = isCornerPiece ? 0x8f8f8f : INNER_BAR_COLOR;
+            const pairCount=isBarPiece?Math.max(1,wingRanks.get(a)*2):1;
+            for(let unit=0;unit<pairCount;unit++){
+              const t0=unit/pairCount,t1=(unit+1)/pairCount;
+              const unitPoly=isBarPiece ? (()=>{const A=a.outer,B=b.outer,U=B.clone().sub(A).normalize(),L=A.distanceTo(B);let poly=drawPiece.map(q=>[q.x,q.y]);const clip=(limit,above)=>{const out=[];for(let k=0;k<poly.length;k++){const q=poly[k],r=poly[(k+1)%poly.length],d=(q[0]-A.x)*U.x+(q[1]-A.y)*U.y-limit,e=(r[0]-A.x)*U.x+(r[1]-A.y)*U.y-limit,inside=above?d>=-1e-7:d<=1e-7,next=above?e>=-1e-7:e<=1e-7;if(inside)out.push(q);if(inside!==next){const t=d/(d-e);out.push(q.map((v,j)=>v+(r[j]-v)*t));}}poly=out;};if(unit>0)clip(t0*L,true);if(unit<pairCount-1)clip(t1*L,false);return poly.map(q=>new THREE.Vector2(...q));})() : drawPiece;
+              const color=new THREE.Color(pieceColor);if(isBarPiece)color.offsetHSL(0,0,unit%2?.055:-.035);
+              const mat=new THREE.MeshStandardMaterial({color,roughness:.9});
+              pieceGroup.add(extrudeMesh(unitPoly,0,height,mat));
+              const kind=isCore?'core':(outerKey==='outer'?'outer':'inner')+(isBarPiece?'-wing':'-corner');
+              capturePiece(idx,kind,i,unitPoly,height,isBarPiece?{wingRank:wingRanks.get(a),unitIndex:unit+1,unitsPerSide:pairCount,unitsAcrossCorridor:pairCount*2}:{});
+              if(isCore)setupCore(bimPieces[bimPieces.length-1]);
+              addUnitEdges(unitPoly,0,height,pieceGroup);
+              if(isBarPiece)addStoryLines(unitPoly,0,pieceGroup,height/LEVEL_HEIGHT);
+            }
+          }else if(!(outerKey==='outer' && isCornerPiece)){
+            const mesh=planPieceMesh(drawPiece,y,colors[i % colors.length]);
+            if(mesh) pieceGroup.add(mesh);
+          }
+        }
+      }
+    }
+
+    // Cut the INNER ring into 8 separate masses.
+    addPlanPieces(corridorInner, courtyard, 'ci', 'marker', INNER_SEG_COLORS, LEVEL_HEIGHT+0.12, {extrudeBars:true, extrudeCorners:true, cornerHeight:LEVEL_HEIGHT, cornerScale:0.985, barScale:0.995});
+    // Keep corridor as one continuous 7' void band.
+    // Cut the OUTER ring into 8 separate masses.
+    // Bars come from the general ring cutter; corners are rebuilt explicitly so they stay true L-shapes.
+    addPlanPieces(inset, corridorOuter, 'outer', 'co', OUTER_SEG_COLORS, LEVEL_HEIGHT+0.14, {extrudeBars:true, extrudeCorners:false, cornerHeight:LEVEL_HEIGHT, barScale:0.995});
+    addExplicitOuterCornerUnits(inset, corridorOuter, OUTER_SEG_COLORS, LEVEL_HEIGHT+0.14, {cornerHeight:Math.max(...WING_LEVELS[idx])*LEVEL_HEIGHT, translateDist:1.5});
+
+    const c=centroid(courtyard);
+    const offsets=[[-18,-9],[16,12],[-7,18],[18,-16],[0,0]];
+
+  });
+
+  rawGroup.visible=document.getElementById('showRaw').checked;
+  roadGroup.visible=document.getElementById('showRoads').checked;
+  courtGroup.visible=document.getElementById('showCourts').checked;
+  corridorGroup.visible=document.getElementById('showCorridor').checked;
+  blockGroup.visible=false;
+  pieceGroup.visible=true;
+  unitGroup.visible=false;
+  coreGroup.visible=false;
+  shellGroup.visible=false;
+  cutGroup.visible=document.getElementById('showCuts').checked;
+  blueCourtGroup.visible=false;
+  axisGroup.visible=false;
+}
+
+const dimGroup=new THREE.Group();root.add(dimGroup);
+
+function spriteLabel(text,x,y,z,scale=60,destination=dimGroup){
+  const c=document.createElement('canvas');c.width=512;c.height=128;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='rgba(250,248,244,.96)';ctx.fillRect(0,0,c.width,c.height);
+  ctx.strokeStyle='#3a3835';ctx.lineWidth=3;ctx.strokeRect(2,2,c.width-4,c.height-4);
+  ctx.fillStyle='#222';ctx.font='bold 52px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(text,256,64);
+  const tex=new THREE.CanvasTexture(c);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+  sp.position.set(x,y,z);sp.scale.set(scale,scale/4,1);destination.add(sp);
+}
+function dimLine(a,b,tickDir,label,labelPos){
+  dimGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]),mats.dim));
+  const t=10;
+  const p1=[a.clone().add(tickDir.clone().multiplyScalar(-t)),a.clone().add(tickDir.clone().multiplyScalar(t))];
+  const p2=[b.clone().add(tickDir.clone().multiplyScalar(-t)),b.clone().add(tickDir.clone().multiplyScalar(t))];
+  dimGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p1),mats.dim));
+  dimGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p2),mats.dim));
+  spriteLabel(label,labelPos.x,labelPos.y,labelPos.z,64);
+}
+
+// Dimension annotations removed from presentation.
+// BIM data captures the exact polygons used by the original extrusion calls.
+const bimBuildings=[],bimPieces=[];
+const gerehSystem=createGerehLayer(THREE,root);
+let gerehIfcElements=[];
+const bimGroup=new THREE.Group(),outlineGroup=new THREE.Group(),buildingLabels=new THREE.Group();root.add(bimGroup,outlineGroup,buildingLabels);
+const FT=.3048, SLAB=.75;
+function capturePiece(building,kind,index,poly,height,meta={}){
+  bimPieces.push({id:`B${building+1}-${kind}-${String(index+1).padStart(2,'0')}${meta.unitIndex?'-U'+String(meta.unitIndex).padStart(2,'0'):''}`, ...meta,building:`B${building+1}`,kind,height,polygon:poly.map(p=>[p.x,p.y]),area:Math.abs(polygonArea(poly)),levels:Math.round(height/LEVEL_HEIGHT)});
+}
+function setupCore(p){
+ const v=p.polygon.map(q=>new THREE.Vector2(...q));let o=v[1],u=v[0].clone().sub(o).normalize(),w=v[2].clone().sub(o).normalize();
+ const compact=Math.abs(u.dot(w))>.001;
+ if(compact){
+  const inside=point=>{let yes=false;for(let i=0,j=v.length-1;i<v.length;j=i++){const a=v[i],b=v[j];if((a.y>point.y)!==(b.y>point.y)&&point.x<(b.x-a.x)*(point.y-a.y)/(b.y-a.y)+a.x)yes=!yes;}return yes;};
+  let fit=null;
+  for(const deg of [0,90,180,270,...Array.from({length:24},(_,i)=>i*15)]){
+   const a=deg*Math.PI/180,du=new THREE.Vector2(Math.cos(a),Math.sin(a)),dv=new THREE.Vector2(-Math.sin(a),Math.cos(a));
+   const xs=v.map(q=>q.dot(du)),ys=v.map(q=>q.dot(dv));
+   for(let x=Math.min(...xs)+.05;x+23<Math.max(...xs);x+=.5){
+    for(let y=Math.min(...ys)+.05;y+22<Math.max(...ys);y+=.5){
+     let ok=true;
+     for(let t=0;t<=24&&ok;t++)for(const [dx,dy] of [[23*t/24,0],[23*t/24,22],[0,22*t/24],[23,22*t/24]])if(!inside(du.clone().multiplyScalar(x+dx).add(dv.clone().multiplyScalar(y+dy)))){ok=false;break;}
+     if(ok){fit={o:du.clone().multiplyScalar(x-1.5).add(dv.clone().multiplyScalar(y-12.5)),u:du,w:dv};break;}
+    }if(fit)break;
+   }if(fit)break;
+  }
+  if(!fit)throw new Error('Core equipment does not fit '+p.id);
+  ({o,u,w}=fit);
+ }
+ p.core={origin:[o.x,o.y],u:[u.x,u.y],v:[w.x,w.y],compact,elevators:2,stairs:1};
+ p.core.holes=compact?[coreRect(p,16,14,8,8),coreRect(p,16,24,8,8),coreRect(p,2,13,12,21)]:[coreRect(p,2,2,8,8),coreRect(p,12,2,8,8),coreRect(p,2,13,12,21)];
+}
+function coreRect(p,x,y,dx,dy){const {origin:o,u,v}=p.core;return [[x,y],[x+dx,y],[x+dx,y+dy],[x,y+dy]].map(([a,b])=>[o[0]+a*u[0]+b*v[0],o[1]+a*u[1]+b*v[1]]);}
+function coreComponents(p,l){
+ const out=[],rect=(...a)=>coreRect(p,...a),part=(poly,z,height)=>({polygon:poly,z,height});
+ const box=(id,type,x,y,dx,dy,z,h,color)=>out.push({id,type,color,parts:[part(rect(x,y,dx,dy),z,h)]});
+ // Paired 8 x 8 ft shaft clear zones, with landing-side door gaps.
+ for(let e=0;e<2;e++){
+  const [x,y]=p.core.liftOrigins?.[e]||[p.core.compact?16:2+e*10,p.core.compact?14+e*10:2];
+  if(p.core.courtyardDoors){
+   box(`lift${e+1}-back`,'IFCWALL',x-.5,y-.5,.5,9,SLAB,11.25,0x778ba5);
+   box(`lift${e+1}-low`,'IFCWALL',x,y-.5,8,.5,SLAB,11.25,0x778ba5);
+   box(`lift${e+1}-high`,'IFCWALL',x,y+8,8,.5,SLAB,11.25,0x778ba5);
+   for(const a of [0,6])box(`lift${e+1}-front${a}`,'IFCWALL',x+8,y+a,.5,2,SLAB,11.25,0x778ba5);
+   box(`lift${e+1}-door-head`,'IFCWALL',x+8,y+2,.5,4,SLAB+8,3.25,0x778ba5);
+  }else{
+  const reverse=p.core.liftDoorSides?.[e]===-1;
+  box(`lift${e+1}-back`,'IFCWALL',x-.5,reverse?y+8:y-.5,9,.5,SLAB,11.25,0x778ba5);
+  box(`lift${e+1}-left`,'IFCWALL',x-.5,y,.5,8,SLAB,11.25,0x778ba5);
+  box(`lift${e+1}-right`,'IFCWALL',x+8,y,.5,8,SLAB,11.25,0x778ba5);
+  for(const a of [0,6])box(`lift${e+1}-front${a}`,'IFCWALL',x+a,reverse?y-.5:y+8,2,.5,SLAB,11.25,0x778ba5);
+  }
+  if(l===0)box(`elevator${e+1}`,'IFCTRANSPORTELEMENT',x+.5,y+.5,7,7,SLAB,8,0x4e729d);
+ }
+ // Enclosed return stair, two 10-riser flights for each 12 ft rise.
+ box('stair-left','IFCWALL',1.5,12.5,.5,22,SLAB,11.25,0xad8c6b);
+ if(p.core.courtyardDoors){box('stair-right-front','IFCWALL',14,12.5,.5,.625,SLAB,11.25,0xad8c6b);box('stair-right-back','IFCWALL',14,16.875,.5,17.625,SLAB,11.25,0xad8c6b);box('stair-door-head','IFCWALL',14,13.125,.5,3.75,SLAB+8,3.25,0xad8c6b);}else box('stair-right','IFCWALL',14,12.5,.5,22,SLAB,11.25,0xad8c6b);
+ box('stair-back','IFCWALL',2,34,12,.5,SLAB,11.25,0xad8c6b);
+ for(const [x,dx] of (p.core.courtyardDoors?[[2,12]]:[[2,2],[8,6]]))box('stair-front'+x,'IFCWALL',x,12.5,dx,.5,SLAB,11.25,0xad8c6b);
+ if(l>0)box('floor-landing','IFCSLAB',2,13,12,4,0,SLAB,0xc8af8e);
+ if(l<p.levels-1){
+  box('mid-landing','IFCSLAB',2,30,12,4,6,SLAB,0xc8af8e);
+  for(let flight=0;flight<2;flight++){
+   const parts=[];
+   for(let i=0;i<10;i++)parts.push(part(rect(flight?8.5:2,flight?28.7-i*1.3:17+i*1.3,5.5,1.3),flight?6:0,SLAB+(i+1)*.6));
+   out.push({id:'flight'+(flight+1),type:'IFCSTAIRFLIGHT',color:0xb99a70,parts});
+  }
+ }
+ return out;
+}
+function coreSlabMesh(p,l,mat){
+ if(!p.core||l===0)return extrudeMesh(p.polygon.map(v=>new THREE.Vector2(...v)),l*LEVEL_HEIGHT,SLAB,mat);
+ const shape=new THREE.Shape(p.polygon.map(v=>new THREE.Vector2(v[0],-v[1])));
+ for(const h of p.core.holes)shape.holes.push(new THREE.Path(h.map(v=>new THREE.Vector2(v[0],-v[1]))));
+ const geo=new THREE.ExtrudeGeometry(shape,{depth:SLAB,bevelEnabled:false});geo.rotateX(-Math.PI/2);geo.translate(0,l*LEVEL_HEIGHT,0);return new THREE.Mesh(geo,mat);
+}
+function drawCore(p,l){for(const c of coreComponents(p,l))for(const part of c.parts){
+ const poly=part.polygon.map(v=>new THREE.Vector2(...v)),mesh=extrudeMesh(poly,l*LEVEL_HEIGHT+part.z,part.height,new THREE.MeshStandardMaterial({color:c.color,transparent:c.type==='IFCWALL',opacity:c.type==='IFCWALL'?.45:1,roughness:.8}));
+ mesh.userData={piece:p,level:l,type:c.id};bimGroup.add(mesh);
+ const edge=addUnitEdges(poly,l*LEVEL_HEIGHT+part.z,part.height,bimGroup);edge.userData={piece:p,level:l,type:'boundary'};
+}}
+
+function addUnitEdges(poly,base,height,group){
+ const mesh=extrudeMesh(poly,base,height,mats.block);
+ const edges=new THREE.EdgesGeometry(mesh.geometry,20);mesh.geometry.dispose();
+ const line=new THREE.LineSegments(edges,new THREE.LineBasicMaterial({color:0x3c514e,transparent:true,opacity:.75}));group.add(line);return line;
+}
+function disposeGroup(g){g.traverse(o=>{o.geometry?.dispose();if(o.material&&!Array.isArray(o.material))o.material.dispose();});clear(g);}
+// SECTION MODEL: level indices 0–2 = triplex; 3 = void; 4–7 = apartments.
+const RESIDENTIAL_LEVELS=[0,1,2,4,5,6,7];
+const SECTION_COLORS={valley:0xc5a187,upper:0x93b5b1,core:0x8f8f8f,walk:0xd8c9b4,terrace:0xddd7cd};
+let sectionElements=[],bimBuilt=false,renderedLOD=-1;
+const sectionCaps=new THREE.Group();root.add(sectionCaps);
+function programColor(p,l){
+ if(p.core)return SECTION_COLORS.core;
+ if(p.kind==='outer-corner')return l<3?0xd99a4e:0x91b6c9;
+ let h=2166136261;for(const c of p.id+'-'+(l<3?'home':l))h=Math.imul(h^c.charCodeAt(0),16777619);const noise=(h>>>0)/4294967295;
+ const palette=l<3?[0xefb4d0,0xb74b83,0xf4cee2,0xd679a7,0xa83e75,0xe898bf,0xc45c91]:[0xb5d6a1,0x477959,0x87b867,0x326849,0xc6dda5,0x639866,0x92c3a1];
+ const unit=+(p.id.match(/U(\d+)/)?.[1]||0),band=(unit*3+l*(l<3?0:2)+(h>>>0)%3)%palette.length;
+ const col=new THREE.Color(palette[band]);col.offsetHSL((noise-.5)*.025,(noise-.5)*.08,(noise-.5)*.055);return col.getHex();
+}
+function sliceIntervals(part,x){
+ const ys=[];for(const ring of [part.polygon,...(part.holes||[])])for(let i=0;i<ring.length;i++){const a=ring[i],b=ring[(i+1)%ring.length];if((a[0]<=x&&b[0]>x)||(b[0]<=x&&a[0]>x))ys.push(a[1]+(x-a[0])*(b[1]-a[1])/(b[0]-a[0]));}
+ ys.sort((a,b)=>a-b);const out=[];for(let i=0;i+1<ys.length;i+=2)if(ys[i+1]-ys[i]>.0001)out.push([ys[i],ys[i+1]]);return out;
+}
+function updateSectionCaps(group,x){
+ disposeGroup(sectionCaps);const vertices=[];
+ for(const m of group.children.filter(m=>m.isMesh&&m.visible))for(const e of m.userData.elements||[m.userData.element]){if(!e||!(e.slab||e.ramp||e.type==='IFCWALL'||e.type==='IFCCOLUMN'||e.type==='IFCBEAM'))continue;
+  for(const part of e.parts){if(part.topPolygon){for(const loop of loftSection(part,[0,1],[1,0],x)){const pts=loop.map(q=>new THREE.Vector2(q[0],q[1]));for(const f of THREE.ShapeUtils.triangulateShape(pts,[]))for(const i of f)vertices.push(x-.002,loop[i][1],loop[i][0]);}continue;}for(const [a,b] of sliceIntervals(part,x)){const at=y=>{if(!part.elevations)return part.z;const [q,r,t]=part.polygon,dx=x-q[0],dy=y-q[1],det=(r[0]-q[0])*(t[1]-q[1])-(t[0]-q[0])*(r[1]-q[1]),u=(dx*(t[1]-q[1])-dy*(t[0]-q[0]))/det,v=((r[0]-q[0])*dy-(r[1]-q[1])*dx)/det;return part.z+part.elevations[0]+u*(part.elevations[1]-part.elevations[0])+v*(part.elevations[2]-part.elevations[0]);},lo=at(a),end=at(b),h=part.height,xx=x-.002;vertices.push(xx,lo,a,xx,lo+h,a,xx,end+h,b,xx,lo,a,xx,end+h,b,xx,end,b);}}
+ }
+ if(vertices.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));const mesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0x080808,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));mesh.renderOrder=10;sectionCaps.add(mesh);}
+}
+
+function polyArea2(poly){return Math.abs(polygonArea(poly.map(v=>new THREE.Vector2(...v))));}
+function pointInside2(p,poly){let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++)if((poly[i][1]>p[1])!==(poly[j][1]>p[1])&&p[0]<(poly[j][0]-poly[i][0])*(p[1]-poly[i][1])/(poly[j][1]-poly[i][1])+poly[i][0])inside=!inside;return inside;}
+function fitHomeStair(p){
+ const poly=p.polygon;
+ const corner=chooseCornerStair(poly,p.carve?.entry);
+ if(corner)return corner;
+ for(let edge=0;edge<poly.length;edge++){
+  const a=poly[edge],b=poly[(edge+1)%poly.length],d=Math.hypot(b[0]-a[0],b[1]-a[1]);
+  if(d<8)continue;const u=[(b[0]-a[0])/d,(b[1]-a[1])/d],v=[-u[1],u[0]],xs=poly.map(q=>q[0]*u[0]+q[1]*u[1]),ys=poly.map(q=>q[0]*v[0]+q[1]*v[1]);
+  for(let x=Math.min(...xs)+1;x+9<Math.max(...xs);x+=1)for(let y=Math.min(...ys)+1;y+16<Math.max(...ys);y+=1){
+   const at=(dx,dy)=>[(x+dx)*u[0]+(y+dy)*v[0],(x+dx)*u[1]+(y+dy)*v[1]];
+   let fits=true;for(let t=0;t<=16&&fits;t++)for(const q of [[8*t/16,0],[8*t/16,15],[0,15*t/16],[8,15*t/16]])if(!pointInside2(at(...q),poly)){fits=false;break;}
+   if(fits)return {origin:at(0,0),u,v,width:8,length:15,openingSF:96};
+  }
+ }
+ throw Error('Internal triplex stair does not fit '+p.id);
+}
+function homeRect(p,x,y,w,h){const {origin:o,u,v}=p.homeStair;return [[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(([a,b])=>[o[0]+a*u[0]+b*v[0],o[1]+a*u[1]+b*v[1]]);}
+function homeComponents(p,l){
+ if(l>1)return [];
+ const out=[{id:'private-mid-landing',type:'IFCSLAB',color:0x967a61,parts:[{polygon:homeRect(p,0,12,8,3),z:6,height:SLAB}]}];
+ for(let f=0;f<2;f++)out.push({id:'private-flight-'+(f+1),type:'IFCSTAIRFLIGHT',color:0xb79a7d,tread:.9,parts:Array.from({length:10},(_,i)=>({polygon:homeRect(p,f?4.25:0,f?11.1-i*.9:3+i*.9,3.75,.9),z:f?6:0,height:SLAB+(i+1)*.6}))});
+ return out;
+}
+function sectionLayer(l){return l<3?'valley':l===3?'void':'upper';}
+function sectionPart(poly,z,height,holes=[]){return {polygon:poly,z,height,holes};}
+function addSection(p,l,type,suffix,parts,extra={}){
+ const e={id:p.id+'-L'+(l+1)+'-'+suffix,building:p.building,piece:p,level:l,layer:!p.core&&p.upperStart!==undefined&&l>=p.upperStart?'upper':sectionLayer(l),type,parts,color:programColor(p,l),...extra};sectionElements.push(e);return e;
+}
+function entryEdge(p,b){
+ const ring=(p.kind==='outer-corner'||p.kind==='outer-wing'?b.corridorOuter:b.corridorInner).map(v=>new THREE.Vector2(...v));
+ let best=null;
+ p.polygon.forEach((a,i)=>{const c=p.polygon[(i+1)%p.polygon.length],len=Math.hypot(c[0]-a[0],c[1]-a[1]);if(len<5)return;const mid=new THREE.Vector2((a[0]+c[0])/2,(a[1]+c[1])/2);const hit=nearestPointOnPolygon(ring,mid);const d=mid.distanceTo(hit.point||hit);if(!best||d<best.d)best={a,c,len,d,mid};});return best;
+}
+function ringOffset(poly,d){return offsetConvex(poly.map(v=>new THREE.Vector2(...v)),d).map(v=>[v.x,v.y]);}
+function mapRingPoint(q,a,b,c,d){
+ let best=null,score=-Infinity;
+ for(let i=0;i<a.length;i++){const j=(i+1)%a.length;
+  for(const [src,dst] of [[[a[i],a[j],b[j]],[c[i],c[j],d[j]]],[[a[i],b[j],b[i]],[c[i],d[j],d[i]]]]){
+   const [u,v,w]=src,den=(v[1]-w[1])*(u[0]-w[0])+(w[0]-v[0])*(u[1]-w[1]);
+   const x=((v[1]-w[1])*(q[0]-w[0])+(w[0]-v[0])*(q[1]-w[1]))/den,y=((w[1]-u[1])*(q[0]-w[0])+(u[0]-w[0])*(q[1]-w[1]))/den,z=1-x-y;
+   const mapped=[0,1].map(k=>x*dst[0][k]+y*dst[1][k]+z*dst[2][k]);if(Math.min(x,y,z)>-1e-5)return mapped; if(Math.min(x,y,z)>score){score=Math.min(x,y,z);best=mapped;}
+  }
+ }
+ return best;
+}
+function clipHalf(poly,a,b,inside){
+ const cross=q=>(b[0]-a[0])*(q[1]-a[1])-(b[1]-a[1])*(q[0]-a[0]);const out=[];
+ for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length],x=cross(p),y=cross(q),ip=inside?x>=-1e-8:x<=1e-8,iq=inside?y>=-1e-8:y<=1e-8;
+ if(ip)out.push(p);if(ip!==iq){const t=x/(x-y);out.push([p[0]+t*(q[0]-p[0]),p[1]+t*(q[1]-p[1])]);}}
+ return out;
+}
+function minusCore(poly,core){let rem=poly,result=[];const c=ensureCCW(core.map(v=>new THREE.Vector2(...v))).map(v=>[v.x,v.y]);
+ for(let i=0;i<c.length&&rem.length>=3;i++){const a=c[i],b=c[(i+1)%c.length],outside=clipHalf(rem,a,b,false);if(outside.length>=3&&polyArea2(outside)>.001)result.push(outside);rem=clipHalf(rem,a,b,true);}return result;
+}
+function galleryParts(b,z,height){const polys=[];
+ for(const [a,c] of [[ringOffset(b.corridorOuter,-6),ringOffset(b.corridorOuter,-2.5)],[ringOffset(b.corridorInner,2.5),ringOffset(b.corridorInner,6)]])for(let i=0;i<a.length;i++){const j=(i+1)%a.length;let pieces=[[a[i],a[j],c[j],c[i]]];for(const core of bimPieces.filter(p=>p.building===b.id&&p.core))pieces=pieces.flatMap(poly=>minusCore(poly,core.polygon));polys.push(...pieces);}
+ return polys.map(poly=>sectionPart(poly,z,height));
+}
+function carveLowerUnit(p){
+ if(!p.retail){const b=bimBuildings.find(b=>b.id===p.building),e=entryEdge(p,b);p.designPolygon=p.polygon.map(q=>q.slice());p.designHoles=[];p.designArea=polyArea2(p.designPolygon);p.carve={name:'Straight triplex shell',entry:[e.mid.x,e.mid.y],u:[(e.c[0]-e.a[0])/e.len,(e.c[1]-e.a[1])/e.len],v:[0,0],facadeCourtDepth:4,voidPolygon:[],facadeCourt:[],horizontalCuts:[],openArea:0};return;}
+
+ let h=2166136261;for(const c of p.id)h=Math.imul(h^c.charCodeAt(0),16777619);let seed=h>>>0;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ const base=ensureCCW(p.polygon.map(q=>new THREE.Vector2(...q))).map(q=>[q.x,q.y]),b=bimBuildings.find(b=>b.id===p.building),edge=entryEdge({...p,polygon:base},b);
+ const index=base.findIndex((a,i)=>Math.hypot((a[0]+base[(i+1)%base.length][0])/2-edge.mid.x,(a[1]+base[(i+1)%base.length][1])/2-edge.mid.y)<.01),a=base[index],end=base[(index+1)%base.length],len=Math.hypot(end[0]-a[0],end[1]-a[1]),u=[(end[0]-a[0])/len,(end[1]-a[1])/len],v=[-u[1],u[0]];
+ const at=(x,y)=>[a[0]+u[0]*x+v[0]*y,a[1]+u[1]*x+v[1]*y],family=(h>>>0)%4;
+ let width=Math.min(len*.46, p.retail?20:12)*(0.75+random()*.25),depth=(p.retail?8:4)+random()*(p.retail?8:5),start=(len-width)*(.3+random()*.4),notch,route;
+ const stair=p.retail?homeRect(p,-.7,-.7,9.4,16.4):null;
+ for(let tries=0;tries<25;tries++){
+  route=family===0?[[start,0],[start,depth],[start+width,depth],[start+width,0]]:family===1?[[start,0],[start+width*.16,depth],[start+width*.84,depth],[start+width,0]]:family===2?[[start,0],[start,depth*.55],[start+width*.23,depth],[start+width*.77,depth],[start+width,depth*.55],[start+width,0]]:[[start,0],[start,depth*.5],[start+width*.25,depth*.5],[start+width*.25,depth],[start+width,depth],[start+width,0]];
+  notch=route.map(q=>at(...q));const samples=route.slice(1,-1).flatMap(([x,y])=>[at(x,y),at(x,y*.5)]);
+  const safe=samples.every(q=>pointInside2(q,base)&&(!stair||!pointInside2(q,stair)))&&(!stair||!stair.some(q=>pointInside2(q,notch)));
+  if(safe)break;start=(len-width)*random();depth*=.92;
+ }
+ p.designPolygon=base.flatMap((q,i)=>i===index?[q,...notch]:[q]);
+ p.carve={name:['Entry court','Tapered court','Chamfered court','Stepped court'][family],family,width,depth,entry:at(start+width/2,depth),u,v,signature:p.id+'-'+width.toFixed(4)+'-'+depth.toFixed(4),voidPolygon:notch};
+ p.designHoles=[];
+ // Open the second courtyard directly to the unit's external facade.
+ const facade=p.kind.startsWith('outer')?b.outer:b.courtyard;
+ const candidates=base.map((q,i)=>{const n=base[(i+1)%base.length],mid=new THREE.Vector2((q[0]+n[0])/2,(q[1]+n[1])/2),hit=nearestPointOnPolygon(facade.map(v=>new THREE.Vector2(...v)),mid);return {i,d:mid.distanceTo(hit.point||hit),len:Math.hypot(n[0]-q[0],n[1]-q[1])};}).filter(e=>e.d<2&&e.len>8).sort((a,b)=>b.len-a.len);
+ for(const candidate of candidates){
+  const aa=base[candidate.i],bb=base[(candidate.i+1)%base.length],uu=[(bb[0]-aa[0])/candidate.len,(bb[1]-aa[1])/candidate.len],vv=[-uu[1],uu[0]],at=(x,y)=>[aa[0]+uu[0]*x+vv[0]*y,aa[1]+uu[1]*x+vv[1]*y];
+  for(let trial=0;trial<90;trial++){
+   const w=Math.min(candidate.len*.38,p.retail?15:9)*(0.75+random()*.25),depth=(p.retail?6:4)+random()*(p.retail?9:5),start=2+random()*(candidate.len-w-4),notch=[at(start,0),at(start,depth),at(start+w,depth),at(start+w,0)];
+   const samples=[];for(let i=0;i<=8;i++)for(let j=1;j<=8;j++)samples.push(at(start+w*i/8,depth*j/8));
+   if(!samples.every(q=>pointInside2(q,p.designPolygon)&&(!stair||!pointInside2(q,stair)))||p.designPolygon.some(q=>pointInside2(q,notch))||stair&&stair.some(q=>pointInside2(q,notch)))continue;
+   const edgeIndex=p.designPolygon.findIndex(q=>Math.hypot(q[0]-aa[0],q[1]-aa[1])<.01);
+   if(edgeIndex<0)continue;
+   p.designPolygon=p.designPolygon.flatMap((q,i)=>i===edgeIndex?[q,...notch]:[q]);p.carve.facadeCourt=notch;p.carve.facadeCourtWidth=w;p.carve.facadeCourtDepth=depth;break;
+  }
+  if(p.carve.facadeCourt)break;
+ }
+ if(!p.carve.facadeCourt)throw Error('Cannot fit facade court '+p.id);
+ p.carve.horizontalCuts=[]; // Continuous vertical enclosure: no repeating horizontal reveal bands.
+ p.designArea=polyArea2(p.designPolygon)-p.designHoles.reduce((n,h)=>n+polyArea2(h),0);
+ p.carve.openArea=p.area-p.designArea;
+}
+
+function simpleRing(r){
+ const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+ for(let i=0;i<r.length;i++)for(let j=i+1;j<r.length;j++){if(j===i+1||i===0&&j===r.length-1)continue;const a=r[i],b=r[(i+1)%r.length],c=r[j],d=r[(j+1)%r.length];if(cross(a,b,c)*cross(a,b,d)<-1e-10&&cross(c,d,a)*cross(c,d,b)<-1e-10)return false;}return true;
+}
+function horizontalCarveParts(part,p,wall){
+ const out=[],end=part.z+part.height,levels=[part.z,end];for(const c of p.carve.horizontalCuts){if(c.z>part.z&&c.z<end)levels.push(c.z);if(c.z+c.height>part.z&&c.z+c.height<end)levels.push(c.z+c.height);}levels.sort((a,b)=>a-b);
+ for(let i=0;i<levels.length-1;i++){const z=levels[i],height=levels[i+1]-z,band=p.carve.horizontalCuts.find(c=>z+height/2>=c.z&&z+height/2<c.z+c.height);let depth=band?band.depth:0,poly=depth?ringOffset(part.polygon,depth):part.polygon;
+ if(band)for(let attempt=0;attempt<12;attempt++){
+  const inner=ringOffset(poly,.5),safe=simpleRing(inner)&&simpleRing(poly)&&inner.every((q,j)=>{const n=inner[(j+1)%inner.length];return Array.from({length:13},(_,k)=>[q[0]+(n[0]-q[0])*k/12,q[1]+(n[1]-q[1])*k/12]).every(v=>pointInside2(v,poly));});if(safe)break;depth*=.72;poly=ringOffset(part.polygon,depth);
+ }
+ out.push(sectionPart(poly,z,height,wall?[ringOffset(poly,.5)]:(part.holes||[])));}return out;
+}
+
+// Façade setbacks preserve the original slab edges and party-wall boundaries.
+function facadeBounds(p,upper=false){const b=bimBuildings.find(b=>b.id===p.building);return p.kind.startsWith('outer')?(upper?ringOffset(b.outer,-6):b.outer):b.courtyard;}
+function boundaryEdge(a,c,bound){const m=new THREE.Vector2((a[0]+c[0])/2,(a[1]+c[1])/2),h=nearestPointOnPolygon(bound.map(q=>new THREE.Vector2(...q)),m);return m.distanceTo(h.point||h)<2;}
+function setbackFacade(poly,bound,depth){let out=poly;const ccw=ensureCCW(poly.map(q=>new THREE.Vector2(...q))).map(q=>[q.x,q.y]);for(let i=0;i<ccw.length;i++){const a=ccw[i],c=ccw[(i+1)%ccw.length];if(!boundaryEdge(a,c,bound))continue;const len=Math.hypot(c[0]-a[0],c[1]-a[1]),n=[-(c[1]-a[1])/len,(c[0]-a[0])/len];out=clipHalf(out,[a[0]+n[0]*depth,a[1]+n[1]*depth],[c[0]+n[0]*depth,c[1]+n[1]*depth],true);}return cleanFacadeRing(out);}
+function cleanFacadeRing(poly){let r=poly.filter((q,i)=>Math.hypot(q[0]-poly[(i+1)%poly.length][0],q[1]-poly[(i+1)%poly.length][1])>1e-5);return r.filter((b,i)=>{const a=r[(i+r.length-1)%r.length],c=r[(i+1)%r.length];return Math.abs((b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]))>1e-6;});}
+function prepareFacadeFootprints(p){
+ // Use the same recessed footprint for upper slabs and enclosure: no projecting band.
+ p.upperPolygon=setbackFacade(p.upperPolygon,facadeBounds(p,true),3);
+ p.upperSlabPolygon=p.upperPolygon.map(q=>q.slice());p.upperArea=polyArea2(p.upperPolygon);
+ p.groundPolygon=p.retail?p.designPolygon:setbackFacade(p.designPolygon,facadeBounds(p),p.carve.facadeCourtDepth);
+ p.groundArea=polyArea2(p.groundPolygon);p.lowerTotalArea=p.groundArea+2*p.designArea-192;
+}
+function applyFacadeDesign(){
+ sectionElements=sectionElements.filter(e=>!(e.wall&&!e.piece.core&&!e.circulation));
+ for(const e of sectionElements)if(e.space&&!e.piece.core&&!e.circulation)e.facadeSpace=true;
+ for(const p of bimPieces.filter(p=>!p.core)){
+  const b=bimBuildings.find(b=>b.id===p.building);
+  const tiers=p.retail?[[0,p.designPolygon,.75,35.25]]:[[0,p.groundPolygon,.75,12],[1,p.designPolygon,12,35.25]];
+  for(let l=p.upperStart;l<p.levels;l++)tiers.push([l,p.upperPolygon,l*12+.75,(l+1)*12-.75]);
+  for(const [l,poly,z,top] of tiers){
+   const upper=l>=p.upperStart,corner=p.retail,ring=ensureCCW(poly.map(q=>new THREE.Vector2(...q))).map(q=>[q.x,q.y]),walls=[],glass=[],frames=[],doors=[],thresholds=[];
+   const classified=classifyUnitEdges(p,ring);
+   const entryDwelling=l===0?p.id+'-TRIPLEX':(!p.singleUpper&&l>=p.duplexBase?p.id+'-DUPLEX':p.id+'-APT-L'+(l+1));
+   for(let i=0;i<ring.length;i++){
+    const a=ring[i],c=ring[(i+1)%ring.length],len=Math.hypot(c[0]-a[0],c[1]-a[1]);if(len<.12)continue;
+    const u=[(c[0]-a[0])/len,(c[1]-a[1])/len],n=[-u[1],u[0]],at=(x,d)=>[a[0]+u[0]*x+n[0]*d,a[1]+u[1]*x+n[1]*d];
+    const solid=(q)=>{const cuts=upper?p.upperCuts:p.carve.horizontalCuts,ends=[q.z,q.z+q.height];for(const cut of cuts)for(const zz of [cut.z,cut.z+cut.height])if(zz>q.z&&zz<q.z+q.height)ends.push(zz);ends.sort((a,b)=>a-b);for(let k=0;k<ends.length-1;k++){const zz=ends[k],hh=ends[k+1]-zz,band=cuts.find(c=>zz+hh/2>=c.z&&zz+hh/2<c.z+c.height),d=band?band.depth:0;walls.push(sectionPart(q.polygon.map(v=>[v[0]+n[0]*d,v[1]+n[1]*d]),zz,hh));}};
+    const part=(x,w,z,h,d=0,t=.5)=>sectionPart([at(x,d),at(x+w,d),at(x+w,d+t),at(x,d+t)],z,h);
+    // Party walls follow a shared original unit boundary; all other faces can receive glazing.
+    const base=upper?p.upperSlabPolygon:p.polygon;
+    const party=edgeIsShared(p,a,c,bimPieces,upper);
+    if(party){
+     const spans=[];
+     for(const q of bimPieces.filter(q=>q!==p&&!q.core&&q.building===p.building&&q.levels>l&&(!upper||q.upperStart<=l))){const other=upper?q.upperPolygon:l===0?q.groundPolygon:q.designPolygon;if(!other)continue;for(const e of sharedBoundary([a,c],other)){const t=q=>(q[0]-a[0])*u[0]+(q[1]-a[1])*u[1];spans.push([Math.max(0,Math.min(t(e.a),t(e.b))),Math.min(len,Math.max(t(e.a),t(e.b)))]);}}
+     spans.sort((a,b)=>a[0]-b[0]);let end=0;for(const [lo,hi] of spans){if(lo>end+.01)walls.push(part(end,lo-end,z,top-z));end=Math.max(end,hi);}if(end<len-.01)walls.push(part(end,len-end,z,top-z));continue;
+    } // Shared lengths are emitted once; exposed step returns remain opaque.
+    if(len<3){solid(part(0,len,z,top-z));continue;}
+    const frontage=classified[i]?.role||'side';
+    // Opaque side/return walls, high-sill entry windows, windows only on rear face.
+    // Ground-floor and each separate upper dwelling get a single entry portal.
+    const includeDoor=l===0||(upper&&(p.singleUpper||l<=p.duplexBase));
+    const designedOpenings=facadeOpenings(frontage,len,z,top,{ground:l===0,retail:corner,includeDoor}); 
+    let openings=[];
+    openings=designedOpenings.map(q=>[q.x,q.w,q.bottom,q.head,q.kind]);
+    let end=0;
+    for(const [x,w,bottom,head,kind] of openings){if(w<=.2||head<=bottom+.15)continue;
+     if(x>end)solid(part(end,x-end,z,top-z));
+     if(bottom>z)solid(part(x,w,z,bottom-z));
+     if(head<top)solid(part(x,w,head,top-head));
+     const target=kind==='door'?doors:glass;
+     target.push(part(x+.075,w-.15,bottom+.075,head-bottom-.15,.18,.06));
+     if(kind==='door'){thresholds.push(part(x,w,z,.075,-.18,.78));}
+     // No projecting sill band; the wall below each window remains its solid backing.
+     for(const xx of [x,x+w-.10])frames.push(part(xx,.10,bottom,head-bottom,.12,.18));for(const zz of [bottom,head-.10])frames.push(part(x,w,zz,.10,.12,.18));
+     const bays=kind==='window'?Math.max(1,Math.ceil(w/5)):1;
+     for(let k=1;k<bays;k++)frames.push(part(x+w*k/bays-.045,.09,bottom,head-bottom,.12,.18));
+     if(kind==='door')frames.push(part(x+w-.4,.07,bottom+3,.35,.12,.16));
+     end=x+w;
+    }
+    if(end<len)solid(part(end,len-end,z,top-z));
+   }
+   if(walls.length)addSection(p,l,'IFCWALL','designed-envelope',walls,{role:'Solid façade piers and spandrels',wall:true,component:true,facade:true});
+   if(glass.length)addSection(p,l,'IFCWINDOW','facade-glazing',glass,{role:'Punched rear windows / high-sill entrance windows; side walls opaque',component:true,glazing:true,facade:true,openingRule:FACADE_RULE_VERSION,windowSillMinFt:3.5});
+   if(doors.length)addSection(p,l,'IFCDOOR','unit-entry-doors',doors,{role:'Unit entrance — one portal per dwelling entry level',component:true,entry:true,facade:true,dwellingId:entryDwelling,openingRule:FACADE_RULE_VERSION,doorHeight:8.1,doorWidth:3.5});
+   if(frames.length)addSection(p,l,'IFCMEMBER','window-frames',frames,{role:'Window and entry frame members',component:true,facade:true,frame:true,lodMin:300});
+   // Exposed window-sill pans are omitted from model geometry; openings and frames remain.
+   if(thresholds.length)addSection(p,l,'IFCSLAB','entry-thresholds',thresholds,{role:'Flush recessed entry threshold',component:true,facade:true,slab:true,lodMin:300});
+  }
+ }
+ for(const e of sectionElements)e.color=e.glazing?0xdde1e2:e.frame?0x454545:0xffffff;
+}
+function assignSteppedLevels(){
+ // End the two lowest upper tiers early, preserving open terraces above the lower homes.
+ const scores=bimPieces.map(p=>{const c=centroid(p.polygon.map(q=>new THREE.Vector2(...q))),theta=Math.atan2(c.y,c.x),r=Math.hypot(c.x,c.y);return {p,score:-r+13*Math.sin(4*theta+r/85)};}).sort((a,b)=>a.score-b.score);
+ scores.forEach(({p},i)=>{const step=Math.min(12,Math.floor(i*13/scores.length));p.siteCorner=false;p.singleUpper=false;p.openTerrace=step<4;p.roofStep=1+Math.floor(step/2);p.levels=5+Math.floor(step/2);if(p.openTerrace)p.levels=3;p.upperStart=4;p.duplexBase=p.openTerrace?null:p.levels-2;p.apartmentCount=p.core?0:Math.max(0,p.duplexBase-p.upperStart);});
+}
+
+function stepEveryAdjacentUnit(){
+ const homes=bimPieces.filter(p=>!p.core),links=new Map(homes.map(p=>[p,[]]));
+ const touches=(a,b)=>{
+  for(let i=0;i<a.length;i++)for(let j=0;j<b.length;j++){
+   const x=a[i],y=a[(i+1)%a.length],u=b[j],v=b[(j+1)%b.length],dx=y[0]-x[0],dy=y[1]-x[1],len=Math.hypot(dx,dy);if(len<.1)continue;
+   if(Math.abs(dx*(u[1]-x[1])-dy*(u[0]-x[0]))/len>.05||Math.abs(dx*(v[1]-x[1])-dy*(v[0]-x[0]))/len>.05)continue;
+   const t=q=>((q[0]-x[0])*dx+(q[1]-x[1])*dy)/len;
+   if(Math.min(len,Math.max(t(u),t(v)))-Math.max(0,Math.min(t(u),t(v)))>1)return true;
+  }return false;
+ };
+ for(let i=0;i<homes.length;i++)for(let j=i+1;j<homes.length;j++)if(homes[i].building===homes[j].building&&touches(homes[i].polygon,homes[j].polygon)){links.get(homes[i]).push(homes[j]);links.get(homes[j]).push(homes[i]);}
+
+ const active=homes.filter(p=>p.levels>3),coreNodes=bimPieces.filter(p=>p.core&&!p.siteCorner),nodes=[...active,...coreNodes],graph=new Map(nodes.map(p=>[p,[]]));
+ for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)if(nodes[i].building===nodes[j].building&&touches(nodes[i].polygon,nodes[j].polygon)){graph.get(nodes[i]).push(nodes[j]);graph.get(nodes[j]).push(nodes[i]);}
+
+ // Follow the full ring across service corners; a core must not restart the roof sequence.
+ for(const b of bimBuildings)for(const outer of [false,true]){
+  const donor=parkingDesign.donors.find(d=>d.building===b.id),center=centroid(b.courtyard.map(q=>new THREE.Vector2(...q)));
+  const ring=bimPieces.filter(p=>p.building===b.id&&(outer?p.kind.startsWith('outer'):p.core||p.kind.startsWith('inner')));
+  ring.push({polygon:outer?donor.polygon:donor.servicePolygon,removed:true});
+  const angle=p=>{const c=centroid(p.polygon.map(q=>new THREE.Vector2(...q)));return Math.atan2(c.y-center.y,c.x-center.x);};
+  ring.sort((a,b)=>angle(a)-angle(b));
+  for(let i=0;i<ring.length;i++){const a=ring[i],c=ring[(i+1)%ring.length];if(graph.has(a)&&graph.has(c)){if(!graph.get(a).includes(c))graph.get(a).push(c);if(!graph.get(c).includes(a))graph.get(c).push(a);}}
+ }
+ const radius=p=>{const c=centroid(p.polygon.map(q=>new THREE.Vector2(...q)));return Math.hypot(c.x,c.y);},pending=new Set(nodes);
+ while(pending.size){
+  const first=pending.values().next().value,component=[],queue=[first];pending.delete(first);
+  for(let i=0;i<queue.length;i++){const p=queue[i];component.push(p);for(const q of graph.get(p))if(pending.has(q)){pending.delete(q);queue.push(q);}}
+  const ends=component.filter(p=>graph.get(p).length<=1);
+  const root=(ends.length?ends:component.filter(p=>!p.core)).sort((a,b)=>radius(b)-radius(a))[0];if(!root)continue;
+  const dist=new Map([[root,root.core?-1:0]]),walk=[root];
+  for(let i=0;i<walk.length;i++)for(const q of graph.get(walk[i]))if(!dist.has(q)){dist.set(q,dist.get(walk[i])+1);walk.push(q);}
+  for(const p of component){
+   p.levels=4+dist.get(p);p.roofStep=dist.get(p)+1;
+   if(p.core)continue;
+   p.upperStart=p.levels<=5?3:4;p.duplexBase=p.levels===4?null:p.levels-2;p.singleUpper=p.levels===4;
+   p.apartmentCount=p.singleUpper?1:Math.max(0,p.duplexBase-p.upperStart);
+  }
+ }
+
+ // The inner ring is the common height datum for both sides of each valley.
+ const sectionKeys=['levels','roofStep','upperStart','duplexBase','singleUpper','apartmentCount','openTerrace'];
+ for(const p of homes.filter(p=>p.kind==='outer-wing')){
+  const inner=homes.find(q=>q.id===p.id.replace('-outer-wing-','-inner-wing-'));
+  if(inner){for(const k of sectionKeys)p[k]=inner[k];p.pairedWith=inner.id;inner.pairedWith=p.id;}
+ }
+ for(const p of homes.filter(p=>p.kind==='outer-corner'&&!p.siteCorner)){
+  const c=centroid(p.polygon.map(q=>new THREE.Vector2(...q)));
+  const core=bimPieces.filter(q=>q.core&&q.building===p.building).sort((a,b)=>centroid(a.polygon.map(q=>new THREE.Vector2(...q))).distanceTo(c)-centroid(b.polygon.map(q=>new THREE.Vector2(...q))).distanceTo(c))[0];
+  if(core){p.levels=core.levels;p.openTerrace=p.levels<=3;p.upperStart=p.levels<=5&&p.levels>3?3:4;p.singleUpper=p.levels===4;p.duplexBase=p.levels>4?p.levels-2:null;p.apartmentCount=p.singleUpper?1:p.levels>4?Math.max(0,p.duplexBase-p.upperStart):0;}
+ }
+
+ for(const p of homes)p.roofNeighbors=links.get(p).filter(q=>q.levels>3&&p.levels>3).map(q=>q.id);
+ parkingDesign.levels=Math.max(...homes.map(p=>p.levels))+1;
+ parkingDesign.roofSteps=new Set(homes.filter(p=>p.levels>3).map(p=>p.levels)).size;
+
+}
+
+function markSiteCorners(){
+ for(const b of bimBuildings){
+  const corner=bimPieces.filter(p=>p.building===b.id&&p.kind==='outer-corner').sort((a,b)=>Math.max(...b.polygon.map(q=>Math.hypot(...q)))-Math.max(...a.polygon.map(q=>Math.hypot(...q))))[0];
+  const center=p=>centroid(p.polygon.map(q=>new THREE.Vector2(...q))),c=center(corner);
+  const core=bimPieces.filter(p=>p.building===b.id&&p.core).sort((a,b)=>center(a).distanceTo(c)-center(b).distanceTo(c))[0];
+  for(const p of [corner,core]){p.siteCorner=true;p.upperStart=4;p.levels=3;p.duplexBase=null;p.apartmentCount=0;}
+ }
+}
+function recessSiteCorner(p){
+ if(!p.siteCorner)return;
+ p.designPolygon=setbackFacade(p.polygon,facadeBounds(p),14);p.designHoles=[];p.designArea=polyArea2(p.designPolygon);
+ p.groundPolygon=p.designPolygon;p.groundArea=p.designArea;p.lowerTotalArea=3*p.designArea-192;p.homeStair=fitHomeStair({...p,polygon:p.designPolygon});p.cornerSetback=14;
+}
+function monumentalCornerStair(p){
+ const poly=p.polygon,i=poly.reduce((best,q,j)=>Math.hypot(...q)>Math.hypot(...poly[best])?j:best,0),o=poly[i],a=poly[(i+poly.length-1)%poly.length],b=poly[(i+1)%poly.length];
+ const la=Math.hypot(a[0]-o[0],a[1]-o[1]),lb=Math.hypot(b[0]-o[0],b[1]-o[1]),u=[(a[0]-o[0])/la,(a[1]-o[1])/la],v=[(b[0]-o[0])/lb,(b[1]-o[1])/lb],tread=Math.min(1.3,(Math.min(la,lb)-32)/33),run=33*tread+10,riser=6/11;
+ const at=(x,y,z)=>[o[0]+x*u[0]+y*v[0],o[1]+x*u[1]+y*v[1],z],rect=(x,y,w,d)=>[[x,y],[x+w,y],[x+w,y+d],[x,y+d]].map(([x,y])=>at(x,y,0).slice(0,2));
+ const add=(name,type,parts,extra={})=>addSection(p,Math.min(3,Math.floor(parts[0].z/12)),type,'monumental-'+name,parts,{role:'Open monumental corner stair',color:0xffffff,component:true,entry:true,monumental:true,circulation:true,tread,riser,...extra});
+ const route=[at(14+run+3,7,.75)],openings=[];
+ for(let leg=0;leg<2;leg++)for(let flight=0;flight<3;flight++){
+  const steps=[],guards=[];
+  for(let k=0;k<11;k++){const n=flight*11+k,d=n*tread+flight*5,top=.75+leg*18+(n+1)*riser,q=leg?rect(1,14+d,12,tread):rect(14+run-d-tread,1,tread,12);
+   steps.push(sectionPart(q,top-.3,.3));openings.push(q);route.push(leg?at(7,14+d+tread/2,top):at(14+run-d-tread/2,7,top));
+   guards.push(sectionPart(leg?rect(1,14+d,.2,tread):rect(14+run-d-tread,1,tread,.2),top,3.5));
+  }
+  add(leg+'-flight-'+flight,'IFCSTAIRFLIGHT',steps);add(leg+'-guard-'+flight,'IFCRAILING',guards);
+  if(flight<2){const d=(flight+1)*11*tread+flight*5,z=.75+leg*18+(flight+1)*6,q=leg?rect(1,14+d,12,5):rect(14+run-d-5,1,5,12);add(leg+'-rest-'+flight,'IFCSLAB',[sectionPart(q,z-.75,.75)],{slab:true});openings.push(q);route.push(leg?at(7,14+d+2.5,z):at(14+run-d-2.5,7,z));}
+  if(leg===0&&flight===2)route.push(at(7,7,18.75));
+ }
+ const top=rect(1,14+run,18,6),street=rect(14+run,1,6,13);
+ add('turn','IFCSLAB',[sectionPart(rect(1,1,13,13),18,.75)],{slab:true});openings.push(rect(1,1,13,13));
+ add('top','IFCSLAB',[sectionPart(top,36,.75)],{slab:true,stairLanding:true});route.push(at(7,17+run,36.75),at(17,17+run,36.75));
+ add('street','IFCSLAB',[sectionPart(street,0,.75)],{slab:true});
+ p.monumentalStair={width:12,height:36,risers:66,riser,tread,run,turningLanding:13,route,openings,top,street,openTop:true};
+}
+// The Core joins the four center-facing corner parcels; coordinates follow the pedestrian axes.
+let parkingDesign=null;
+function coreFrame(){const a=state.axis1*Math.PI/180,u=[Math.cos(a),Math.sin(a)],v=[-u[1],u[0]];return {u,v,world:(x,y)=>[x*u[0]+y*v[0],x*u[1]+y*v[1]],local:q=>[q[0]*u[0]+q[1]*u[1],q[0]*v[0]+q[1]*v[1]]};}
+function parkingRect(x,y,w,d){const f=coreFrame();return [[x,y],[x+w,y],[x+w,y+d],[x,y+d]].map(q=>f.world(...q));}
+function takeCentralCorners(){
+ const donors=[],removed=[];
+ for(const b of bimBuildings){
+  const ps=bimPieces.filter(p=>p.building===b.id),radius=p=>Math.hypot(...p.polygon.reduce((a,q)=>[a[0]+q[0]/p.polygon.length,a[1]+q[1]/p.polygon.length],[0,0]));
+  const corner=ps.filter(p=>p.kind==='outer-corner').sort((a,b)=>radius(a)-radius(b))[0],core=ps.filter(p=>p.core).sort((a,b)=>radius(a)-radius(b))[0];
+  donors.push({building:b.id,cornerId:corner.id,coreId:core.id,polygon:corner.polygon,servicePolygon:core.polygon});removed.push(corner,core);
+ }
+ const f=coreFrame(),half=Math.max(...removed.flatMap(p=>p.polygon.flatMap(q=>f.local(q).map(Math.abs))));
+ parkingDesign={name:'The Core',id:'CORE',half,polygon:circle(half),donors,levels:Math.max(...bimPieces.filter(p=>!p.core&&!removed.includes(p)).map(p=>p.levels)),roofSteps:new Set(bimPieces.filter(p=>!p.core&&p.levels>3&&!removed.includes(p)).map(p=>p.levels)).size,stalls:[],ramps:[],tunnels:[],parkingArea:0,passageWidth:34,passageHeight:35.25};
+ for(const p of removed)bimPieces.splice(bimPieces.indexOf(p),1);
+}
+function outsideCore(poly){return minusCore(poly,parkingDesign.polygon).filter(p=>p.length>=3&&polyArea2(p)>.02);}
+function trimCoreNeighbor(p){
+ const trim=poly=>{const xy=poly.map(q=>coreFrame().local(q)),H=parkingDesign.half;if(Math.min(...xy.map(q=>q[0]))>=H||Math.max(...xy.map(q=>q[0]))<=-H||Math.min(...xy.map(q=>q[1]))>=H||Math.max(...xy.map(q=>q[1]))<=-H)return poly;return outsideCore(poly).sort((a,b)=>polyArea2(b)-polyArea2(a))[0]||poly;};
+ for(const key of ['designPolygon','groundPolygon','upperPolygon','upperSlabPolygon'])if(p[key])p[key]=trim(p[key]);
+ p.designArea=polyArea2(p.designPolygon);p.groundArea=polyArea2(p.groundPolygon);p.upperArea=polyArea2(p.upperPolygon);p.lowerTotalArea=p.groundArea+2*p.designArea-192;
+}
+function buildParkingCore(){
+ const d=parkingDesign,H=d.half,f=coreFrame(),rect=parkingRect;
+ buildCircularCore({d,frame:f,pieces:bimPieces,buildings:bimBuildings,addSection,part:sectionPart,coreComponents});
+ const add=(l,type,id,parts,extra={})=>addSection(d.piece,l,type,id,parts,{color:0xffffff,component:true,parking:true,layer:'parking',...extra});
+ const part=(poly,z,h)=>sectionPart(poly,z,h);
+ // Two street portals descend in the perimeter setback; tunnel connections run under the pedestrian axis.
+ const tunnelWidth=24,extent=330/Math.max(Math.abs(f.u[0]),Math.abs(f.u[1]));
+ for(const sign of [-1,1]){
+  const x0=sign>0?H-2:-extent,ww=extent-H+2,poly=rect(x0,-12,ww,24);add(-1,'IFCSLAB','tunnel-floor-'+sign,[part(poly,-12,.75)],{slab:true,tunnel:true});
+  add(-1,'IFCSLAB','tunnel-roof-'+sign,[part(poly,-2.5,1)],{slab:true,tunnel:true});
+  for(const yy of [-12.75,12])add(-1,'IFCWALL','tunnel-wall-'+sign+'-'+yy,[part(rect(x0,yy,ww,.75),-12,10.5)],{wall:true,tunnel:true});
+  d.tunnels.push({polygon:poly,z:-12,width:24});
+  // Portal at the east/west street, descending along the 18-foot perimeter reserve to the tunnel mouth.
+  const side=sign*323,cy=sign*f.u[1]*extent,startY=cy-sign*160,worldRect=(y0,y1)=>[[side-7,y0],[side+7,y0],[side+7,y1],[side-7,y1]];
+  const rampPoly=worldRect(startY,cy);const ramp={polygon:rampPoly,z:-.75,height:.75,elevations:[0,0,-11.25,-11.25],holes:[]};
+  add(-1,'IFCRAMPFLIGHT','street-ramp-'+sign,[ramp],{ramp:true,streetRamp:true,role:'Street portal to Level -1 · 7.0% average slope'});
+  d.ramps.push({polygon:rampPoly,zStart:0,zEnd:-11.25,width:14,length:160,sign});
+  // Retaining walls descend with the portal rather than covering it with ground.
+  for(const xx of [side-7.5,side+7]){const wall={polygon:[[xx,startY],[xx+.5,startY],[xx+.5,cy],[xx,cy]],z:-12.75,height:16.25,holes:[]};add(-1,'IFCWALL','portal-retaining-'+sign+'-'+xx,[wall],{wall:true,streetRamp:true});}
+  const end=f.world(sign*extent,0),link=[[side-7,cy-12],[side+7,cy-12],[end[0]+sign*12,end[1]+12],[end[0]-sign*12,end[1]+12]];
+  // Broad turning apron joins each descending ramp to its tunnel.
+  const xs=[side-7,end[0]-12,side+7,end[0]+12],ys=[cy-12,end[1]-12,cy+12,end[1]+12];const apron=[[Math.min(...xs),Math.min(...ys)],[Math.max(...xs),Math.min(...ys)],[Math.max(...xs),Math.max(...ys)],[Math.min(...xs),Math.max(...ys)]];
+  add(-1,'IFCSLAB','tunnel-turning-apron-'+sign,[part(apron,-12,.75)],{slab:true,tunnel:true});
+ }
+}
+
+function activeGalleryParts(parts,b,l){
+ const round=v=>Array.isArray(v)?v.map(round):Math.round(v*10000)/10000;
+ const regions=[];
+ for(const p of bimPieces.filter(p=>p.building===b.id&&!p.core&&p.levels>l&&l>=p.upperStart)){
+  const e=entryEdge(p,b),u=[(e.c[0]-e.a[0])/e.len,(e.c[1]-e.a[1])/e.len],v=[-u[1],u[0]],at=(x,y)=>[e.a[0]+u[0]*x+v[0]*y,e.a[1]+u[1]*x+v[1]*y];
+  const box=[at(0,-24),at(e.len,-24),at(e.len,24),at(0,24)];
+  for(const part of parts){const hit=window.polygonClipping.intersection(round([part.polygon]),round([box]));for(const poly of hit)regions.push({...part,polygon:cleanFacadeRing(poly[0].slice(0,-1)),holes:poly.slice(1).map(r=>r.slice(0,-1))});}
+ }
+ if(!regions.length)return [];
+ const union=window.polygonClipping.union(...regions.map(p=>round([p.polygon,...(p.holes||[])])));
+ return union.flatMap(poly=>outsideCore(poly[0].slice(0,-1)).map(polygon=>({...parts[0],polygon:cleanFacadeRing(polygon),holes:poly.slice(1).map(r=>r.slice(0,-1))}))).filter(p=>p.polygon.length>=3&&polyArea2(p.polygon)>.01);
+}
+
+// One continuous Level 4 plate per residential building, with three straight valley slots.
+function buildCleanTerraces(){
+ const rounded=v=>Array.isArray(v)?v.map(rounded):Math.round(v*10000)/10000,pc=Object.fromEntries(['difference','intersection','union'].map(k=>[k,(...args)=>window.polygonClipping[k](...args.map(rounded))])),clean=r=>r.slice(0,-1),shape=p=>[p];
+ // Replace the fragmented unit roofs and terrace-edge walls, keeping upper roofs intact.
+ sectionElements=sectionElements.filter(e=>!(e.terrace||(e.parapet&&e.piece.core&&e.piece.levels===3)||(e.circulation&&e.level===3&&(e.slab||e.type==='IFCRAILING'))));
+ for(const b of bimBuildings.filter(b=>!b.parking)){
+  const cores=bimPieces.filter(p=>p.building===b.id&&p.core),slots=[];
+  const edges=b.corridorOuter.map((a,i)=>{const j=(i+1)%b.corridorOuter.length,c=b.corridorOuter[j],u=b.corridorInner[i],v=b.corridorInner[j];return {i,a,c,u,v,len:Math.hypot(c[0]-a[0],c[1]-a[1])};}).sort((a,b)=>b.len-a.len).slice(0,3);
+  for(const e of edges){
+   const a=[(e.a[0]+e.u[0])/2,(e.a[1]+e.u[1])/2],c=[(e.c[0]+e.v[0])/2,(e.c[1]+e.v[1])/2],len=Math.hypot(c[0]-a[0],c[1]-a[1]),u=[(c[0]-a[0])/len,(c[1]-a[1])/len],v=[-u[1],u[0]],half=2.5;
+   let spans=[[20,len-20]];
+   for(const poly of [...cores.map(p=>p.polygon),parkingDesign.polygon]){
+    const xy=poly.map(q=>[(q[0]-a[0])*u[0]+(q[1]-a[1])*u[1],(q[0]-a[0])*v[0]+(q[1]-a[1])*v[1]]);
+    if(Math.min(...xy.map(q=>q[1]))>half+2||Math.max(...xy.map(q=>q[1]))<-half-2)continue;
+    const lo=Math.min(...xy.map(q=>q[0]))-2,hi=Math.max(...xy.map(q=>q[0]))+2;
+    spans=spans.flatMap(([l,h])=>hi<=l||lo>=h?[[l,h]]:[[l,Math.min(h,lo)],[Math.max(l,hi),h]].filter(([x,y])=>y-x>5));
+   }
+   const span=spans.sort((a,b)=>(b[1]-b[0])-(a[1]-a[0]))[0];
+   if(span){const at=(t,r)=>[a[0]+u[0]*t+v[0]*r,a[1]+u[1]*t+v[1]*r];slots.push([at(span[0],-half),at(span[1],-half),at(span[1],half),at(span[0],half)]);}
+
+  }
+  // Hold the previously approved deck edges while the occupied rings shift inward.
+  const extendedOuter=ringOffset(b.outer,-15-COURTYARD_SHIFT),extendedCourt=ringOffset(b.courtyard,15-COURTYARD_SHIFT);
+  const base=pc.difference(shape(extendedOuter),shape(extendedCourt),shape(parkingDesign.polygon));
+  const plate=pc.difference(base,...slots.map(shape),...cores.map(p=>shape(p.polygon)));
+  const p={id:b.id+'-TERRACE',building:b.id,kind:'terrace',polygon:b.outer,levels:4,area:0};
+  const parts=plate.map(rings=>sectionPart(clean(rings[0]),36,SLAB,rings.slice(1).map(clean)));
+  p.area=parts.reduce((a,p)=>a+polyArea2(p.polygon)-p.holes.reduce((s,h)=>s+polyArea2(h),0),0);
+  addSection(p,3,'IFCSLAB','continuous-level-four',parts,{role:'Continuous fourth-floor terrace with three valley slots',slab:true,terrace:true,roof:true,cleanTerrace:true,color:0xffffff});
+  // Low parapets follow outer edges, courtyard and all three slots; core interfaces stay clear.
+  const strips=[];
+  for(const rings of [...base,...slots.map(q=>[q])])for(const ring of rings){
+   const q=ring.length>1&&Math.hypot(ring[0][0]-ring.at(-1)[0],ring[0][1]-ring.at(-1)[1])<1e-7?clean(ring):ring;
+   for(let i=0;i<q.length;i++){const a=q[i],c=q[(i+1)%q.length],len=Math.hypot(c[0]-a[0],c[1]-a[1]);if(len<.01)continue;const x=-(c[1]-a[1])/len*.5,y=(c[0]-a[0])/len*.5;strips.push(shape([[a[0]+x,a[1]+y],[c[0]+x,c[1]+y],[c[0]-x,c[1]-y],[a[0]-x,a[1]-y]]));}
+  }
+  const guards=pc.intersection(pc.union(...strips),plate);
+  addSection(p,3,'IFCWALL','continuous-parapet',guards.map(r=>sectionPart(clean(r[0]),36+SLAB,1.5,r.slice(1).map(clean))),{role:'18-inch continuous low terrace parapet',wall:true,parapet:true,terrace:true,cleanTerrace:true,component:true,color:0xffffff});
+  const originalRing=pc.difference(shape(b.outer),shape(b.courtyard));
+  let canopy=pc.difference(plate,originalRing);
+  const existing=sectionElements.filter(e=>e.building===b.id&&e.slab&&e.level===4).flatMap(e=>e.parts.filter(q=>Math.abs(q.z-48)<.1).map(q=>[q.polygon,...q.holes||[]]));
+  if(existing.length)canopy=pc.difference(canopy,...existing.map(q=>[q]));
+  addSection(p,4,'IFCSLAB','level-five-canopy',canopy.map(r=>sectionPart(clean(r[0]),48,SLAB,r.slice(1).map(clean))),{role:'Level 5 ceiling slab above 15-foot extended Level 4 terrace; cantilever engineering unresolved',slab:true,canopy:true,terraceExtension:true,structuralReview:true,color:0xffffff});
+  b.terraceDesign={level:4,projectionFt:15,occupiedRingShiftFt:COURTYARD_SHIFT,outerProjectionFromShiftedFacadeFt:15+COURTYARD_SHIFT,courtyardProjectionFromShiftedFacadeFt:15-COURTYARD_SHIFT,canopyLevel:5,slabThickness:SLAB,parapetHeight:1.5,slots,area:p.area,extendedOuter,extendedCourt,engineeringStatus:'Fixed deck edges now project 25 feet beyond shifted outer facade and 5 feet into courtyard; engineered support / connections unresolved'};
+ }
+}
+
+function prepareSectionModel(){
+ sectionElements=[];for(let i=bimPieces.length-1;i>=0;i--)if(bimPieces[i].serviceCore)bimPieces.splice(i,1);bimBuildings.splice(4);assignSteppedLevels();markSiteCorners();takeCentralCorners();stepEveryAdjacentUnit();prepareOffices(bimPieces);window.memoCornerFitReport=fitChamferCores(bimPieces,bimBuildings);
+ for(const b of bimBuildings){b.levels=Math.max(...bimPieces.filter(p=>p.building===b.id).map(p=>p.levels));b.wingLevels=[b.levels,b.levels,b.levels,b.levels];}
+ for(const p of bimPieces){
+  p.streetDuplex=p.kind==='outer-wing'&&!p.office;p.height=p.levels*12;p.occupiedLevels=Array.from({length:p.levels},(_,i)=>i).filter(i=>p.core||i!==3||p.upperStart===3);
+  p.retail=p.kind==='outer-corner';
+  if(!p.core){p.homeStair=fitHomeStair(p);const b=bimBuildings.find(b=>b.id===p.building),outer=p.kind.startsWith('outer');
+   p.upperPolygon=outer?p.polygon.map(q=>mapRingPoint(q,b.outer,b.corridorOuter,ringOffset(b.outer,-6),ringOffset(b.corridorOuter,-6))):p.polygon.slice();if(p.kind==='outer-wing'){const edge=entryEdge(p,b),ctr=b.outer.reduce((a,q)=>[a[0]+q[0]/b.outer.length,a[1]+q[1]/b.outer.length],[0,0]);if(edge){let nx=-(edge.c[1]-edge.a[1])/edge.len,ny=(edge.c[0]-edge.a[0])/edge.len;if(nx*(edge.mid.x-ctr[0])+ny*(edge.mid.y-ctr[1])<0){nx=-nx;ny=-ny;}p.upperPolygon=p.polygon.map(q=>[q[0]+6*nx,q[1]+6*ny]);}}if(!outer){const cut=ringOffset(b.corridorInner,6);for(let i=0;i<cut.length;i++)p.upperPolygon=clipHalf(p.upperPolygon,cut[i],cut[(i+1)%cut.length],true);}p.upperArea=polyArea2(p.upperPolygon);
+  }
+  if(!p.core){carveLowerUnit(p);prepareFacadeFootprints(p);if(!p.office)recessSiteCorner(p);trimCoreNeighbor(p);if(vSettings.enabled&&p.kind?.includes('wing')){p.designPolygon=p.polygon.map(q=>q.slice());p.groundPolygon=p.polygon.map(q=>q.slice());p.upperPolygon=p.polygon.map(q=>q.slice());p.upperSlabPolygon=p.polygon.map(q=>q.slice());p.designHoles=[];p.upperHoles=[];p.designArea=p.groundArea=p.upperArea=polyArea2(p.polygon);p.upperCuts=[];p.carve.horizontalCuts=[];p.lowerTotalArea=3*p.designArea-192;}p.duplexStair=fitHomeStair({...p,polygon:p.upperPolygon});}
+  for(const l of p.occupiedLevels){
+   const poly=p.core?p.polygon:l>=p.upperStart?p.upperPolygon:l===0&&!p.retail?p.groundPolygon:p.designPolygon;
+   const courts=!p.core&&l<3?p.designHoles:[];
+   const top=l===p.levels-1,terrace=!p.core&&l===2,holes=p.core?(l>0?p.core.holes:[]):[...courts,...(p.retail&&(l===1||l===2)?[homeRect(p,0,3,8,12)]:[]),...(!p.core&&l>=p.upperStart&&l===p.levels-1&&!p.singleUpper?[homeRect({...p,homeStair:p.duplexStair},0,3,8,12)]:[])];
+   const dwellingId=p.core||(p.retail&&l<3)?null:l<3?p.id+'-TRIPLEX':!p.singleUpper&&l>=p.duplexBase?p.id+'-DUPLEX':p.id+'-APT-L'+(l+1);
+   addSection(p,l,'IFCSPACE','space',[sectionPart(poly,l*12+(!p.core&&!p.retail&&l>0&&l<3?0:SLAB),12-(!p.core&&!p.retail&&l>0&&l<3?0:SLAB)-(top||terrace?SLAB:0),courts)],{role:p.core?'Core':l<3?(p.retail?'Corner retail':'Triplex family home'):!p.singleUpper&&l>=p.duplexBase?'Stepped roof duplex':'Middle apartment',dwellingId,retail:p.retail&&l<3,space:true});
+   if(p.core||p.retail||l!==1&&l!==2)addSection(p,l,'IFCSLAB','floor',[sectionPart(l>=p.upperStart&&!p.core?p.upperSlabPolygon:poly,l*12,SLAB,holes)],{role:'Floor',color:0xd8d9d4,slab:true});
+   if(!p.core&&(p.retail||l===0||l>=p.upperStart)){const inner=ringOffset(poly,.5);addSection(p,l,'IFCWALL','enclosure',[sectionPart(poly,l*12+SLAB,!p.retail&&l===0?36-2*SLAB:12-SLAB-(top||terrace?SLAB:0),[inner])],{role:'6-inch enclosure walls',wall:true,component:true});}
+   if(!p.core&&l<3&&(p.retail||l===0))for(let i=0;i<courts.length;i++)addSection(p,l,'IFCWALL','lightcourt-wall-'+i,[sectionPart(ringOffset(courts[i],-.5),l*12+SLAB,p.retail?12-SLAB:36-2*SLAB,[courts[i]])],{role:'Light court enclosure',wall:true,component:true});
+   if(top||terrace)addSection(p,l,'IFCSLAB',terrace?'terrace':'roof',[sectionPart(top&&!p.core&&l>=p.upperStart?p.upperSlabPolygon:poly,(l+1)*12-SLAB,SLAB,courts)],{role:terrace?'Triplex roof terrace':'Roof',color:SECTION_COLORS.terrace,slab:true,terrace,roof:true});
+   for(const c of p.core?coreComponents(p,l):p.retail?homeComponents(p,l):[])addSection(p,l,c.type,c.id,c.parts.map(q=>({...q,z:q.z+l*12})),{color:c.color,role:p.core?'Core circulation':p.retail?'Internal retail stair':'Private triplex stair',component:true,tread:c.tread||1.3});
+  }
+  if(p.core)addSection(p,p.levels-1,'IFCWALL','core-roof-parapet',[sectionPart(p.polygon,p.height,1.5,[ringOffset(p.polygon,.5)])],{role:'18-inch core roof parapet',color:0xaaa9a3,component:true,parapet:true,roof:true});
+  if(!p.core){
+   if(p.levels>3&&!p.singleUpper)for(const c of homeComponents({...p,homeStair:p.duplexStair},0))addSection(p,p.duplexBase,c.type,'duplex-'+c.id,c.parts.map(q=>({...q,z:q.z+p.duplexBase*12})),{role:'Private duplex stair',component:true,tread:.9});
+   const b=bimBuildings.find(b=>b.id===p.building),edge=p.siteCorner?entryEdge({...p,polygon:p.designPolygon},b):{a:p.carve.entry,c:[p.carve.entry[0]+p.carve.u[0]*10,p.carve.entry[1]+p.carve.u[1]*10],len:10,mid:new THREE.Vector2(...p.carve.entry)};
+   if(edge){const u=[(edge.c[0]-edge.a[0])/edge.len,(edge.c[1]-edge.a[1])/edge.len],v=[-u[1],u[0]],m=[edge.mid.x,edge.mid.y],panel=[[-2,-.08],[2,-.08],[2,.08],[-2,.08]].map(([a,c])=>[m[0]+u[0]*a+v[0]*c,m[1]+u[1]*a+v[1]*c]);
+    addSection(p,0,'IFCDOOR','valley-entry',[sectionPart(panel,SLAB,8)],{role:p.retail?'Retail entrance':'Triplex front door',color:0x695749,component:true,entry:true});
+   }
+   for(let i=0;i<p.designHoles.length;i++)addSection(p,3,'IFCWALL','lightcourt-parapet-'+i,[sectionPart(ringOffset(p.designHoles[i],-.5),36,1.5,[p.designHoles[i]])],{role:'Light court parapet',color:0xddd8d0,component:true,terrace:true,parapet:true});
+   if(!p.siteCorner&&p.carve.voidPolygon.length>2)addSection(p,0,'IFCSLAB','entry-court-paving',[sectionPart(p.carve.voidPolygon,0,.25),sectionPart(p.carve.facadeCourt,0,.25)],{role:'Private entry courtyard',color:p.retail?0xdcc8ab:0xe5cbd4,slab:true,entry:true});
+   for(const [level,z,poly,suffix] of [[3,36,p.designPolygon,'terrace'],...(p.levels<=3?[]:[[p.levels-1,p.height,p.upperSlabPolygon,'roof']])]){
+    if(p.upperStart===3&&suffix==='terrace')continue;
+    const b=bimBuildings.find(b=>b.id===p.building),upper=suffix==='roof';
+    const bounds=upper?[ringOffset(b.outer,-6),ringOffset(b.corridorOuter,-6),ringOffset(b.corridorInner,6),b.courtyard]:[b.outer,b.corridorOuter,b.corridorInner,b.courtyard];
+    const ring=ensureCCW(poly.map(v=>new THREE.Vector2(...v))),parts=[];
+    for(let i=0;i<ring.length;i++){
+     const a=ring[i],c=ring[(i+1)%ring.length],mid=a.clone().add(c).multiplyScalar(.5);
+     const exposed=(!upper&&[...p.carve.voidPolygon,...p.carve.facadeCourt].some(q=>Math.hypot(q[0]-a.x,q[1]-a.y)<.01))||bounds.some(bound=>{const hit=nearestPointOnPolygon(bound.map(v=>new THREE.Vector2(...v)),mid);return mid.distanceTo(hit.point||hit)<2;});if(!exposed)continue;
+     const d=c.clone().sub(a).normalize(),n=new THREE.Vector2(-d.y,d.x).multiplyScalar(.5);
+     parts.push(sectionPart([[a.x,a.y],[c.x,c.y],[c.x+n.x,c.y+n.y],[a.x+n.x,a.y+n.y]],z,1.5));
+    }
+    if(parts.length)addSection(p,level,'IFCWALL',suffix+'-parapet',parts,{role:'18-inch low '+suffix+' parapet',color:0xddd8d0,component:true,terrace:level===3,parapet:true,roof:upper});
+   }
+  }
+ }
+ for(const b of bimBuildings){
+  const p={id:b.id+'-CIRCULATION',building:b.id,kind:'circulation',polygon:b.corridorOuter,area:polyArea2(b.corridorOuter)-polyArea2(b.corridorInner),levels:8};
+  for(let edge=0;edge<b.corridorOuter.length;edge++){
+   const o=b.corridorOuter[edge],n=b.corridorOuter[(edge+1)%4],i=b.corridorInner[edge],j=b.corridorInner[(edge+1)%4],len=Math.hypot(n[0]-o[0],n[1]-o[1]);
+   const at=(t,r)=>[(o[0]+(n[0]-o[0])*t)*(1-r)+(i[0]+(j[0]-i[0])*t)*r,(o[1]+(n[1]-o[1])*t)*(1-r)+(i[1]+(j[1]-i[1])*t)*r];
+   const box=(t,length,r0,r1)=>[at(t-length/len/2,r0),at(t+length/len/2,r0),at(t+length/len/2,r1),at(t-length/len/2,r1)];
+   addSection(p,0,'IFCFURNISHINGELEMENT','valley-bench-'+edge,[sectionPart(box(.13,4,.07,.28),SLAB,1.5)],{role:'Shared valley bench',color:0x9c8167,component:true,entry:true,circulation:true});
+   // No shrubs or planters immediately beside triplex doors.
+   // Planting belongs in clear, setback-qualified landscape locations, not valley circulation.
+  }
+  addSection(p,0,'IFCSLAB','valley-paving',[...b.corridorOuter.flatMap((a,i)=>outsideCore([a,b.corridorOuter[(i+1)%4],b.corridorInner[(i+1)%4],b.corridorInner[i]]).map(poly=>sectionPart(poly,0,SLAB)))],{role:'Shared valley paving',color:SECTION_COLORS.walk,slab:true,circulation:true});
+  addSection(p,0,'IFCSPACE','three-storey-valley',[...b.corridorOuter.flatMap((a,i)=>outsideCore([a,b.corridorOuter[(i+1)%4],b.corridorInner[(i+1)%4],b.corridorInner[i]]).map(poly=>sectionPart(poly,SLAB,36-SLAB)))],{role:'Three-storey shared valley',color:SECTION_COLORS.walk,space:true,circulation:true,external:true,hideMass:true});
+  for(const l of Array.from({length:b.levels-3},(_,i)=>i+3)){
+   addSection(p,l,'IFCSLAB','upper-gallery-floor',activeGalleryParts(galleryParts(b,l*12,SLAB),b,l),{role:'Open ring access galleries',color:0xc7d3d0,slab:true,circulation:true});
+   // Open guardrails: no infill slab or roof across the 12-foot slot.
+   const strips=[];for(const ring of [ringOffset(b.corridorOuter,-2.55),ringOffset(b.corridorInner,2.55)])for(let i=0;i<ring.length;i++){
+    const a=ring[i],c=ring[(i+1)%ring.length],len=Math.hypot(c[0]-a[0],c[1]-a[1]),nx=-(c[1]-a[1])/len*.05,ny=(c[0]-a[0])/len*.05;
+    let pieces=[[[a[0]+nx,a[1]+ny],[c[0]+nx,c[1]+ny],[c[0]-nx,c[1]-ny],[a[0]-nx,a[1]-ny]]];for(const core of bimPieces.filter(p=>p.building===b.id&&p.core))pieces=pieces.flatMap(poly=>minusCore(poly,core.polygon));
+    strips.push(...pieces.map(poly=>sectionPart(poly,l*12+SLAB,3.5)));
+   }
+   addSection(p,l,'IFCRAILING','gallery-guards',activeGalleryParts(strips,b,l),{role:'Open ring gallery guard',color:0x758b85,component:true,entry:true,circulation:true});
+  }
+  b.upperGalleryArea=galleryParts(b,0,1).reduce((n,p)=>n+polyArea2(p.polygon),0);
+
+ }
+ for(const e of sectionElements)if(e.level<3&&e.piece.carve&&(e.space||e.wall))e.parts=e.parts.flatMap(part=>horizontalCarveParts(part,e.piece,e.wall));
+ for(const p of bimPieces)if(!p.core){p.upperCuts=[];} // No upper-unit horizontal facade cuts.
+ for(const e of sectionElements){if(e.level>=e.piece.upperStart&&!e.piece.core&&e.piece.upperCuts&&(e.space||e.wall))e.parts=e.parts.flatMap(part=>horizontalCarveParts(part,{carve:{horizontalCuts:e.piece.upperCuts}},e.wall));e.color=0xffffff;}
+
+ applyFacadeDesign();
+ for(const p of bimPieces)if(p.siteCorner&&!p.core&&!p.office)monumentalCornerStair(p);
+ sectionElements=sectionElements.filter(e=>!(e.circulation&&e.type==='IFCFURNISHINGELEMENT'&&e.parts.some(p=>p.polygon.some(q=>pointInside2(q,parkingDesign.polygon)))));
+ buildCleanTerraces();buildParkingCore();
+ connectCoreLandings(sectionElements,bimPieces,addSection,sectionPart,ringOffset);
+ addSharedWalls(bimPieces,addSection,sectionPart);
+ window.memoEgressRoutes=addRingStairs(bimBuildings,bimPieces,addSection,sectionPart,entryEdge,ringOffset);
+ const landings=sectionElements.filter(e=>e.stairLanding);
+ for(const guard of sectionElements.filter(e=>e.id.includes('gallery-guards'))){guard.parts=guard.parts.flatMap(part=>{let polys=[[part.polygon]];for(const e of landings.filter(e=>e.building===guard.building))for(const q of e.parts){if(Math.abs(q.z+q.height-part.z)>.1)continue;const rnd=v=>Array.isArray(v)?v.map(rnd):Math.round(v*10000)/10000;polys=window.polygonClipping.difference(rnd(polys),rnd([q.polygon]));}return polys.map(poly=>({...part,polygon:poly[0].slice(0,-1),holes:poly.slice(1).map(r=>r.slice(0,-1))}));});}
+ connectEntryThresholds(sectionElements,addSection,sectionPart);
+ window.memoOfficeProgram=buildOffices(sectionElements,bimPieces,addSection,sectionPart);
+ openCornerStairs(sectionElements,bimPieces);
+ updateGroundOpenings();officeLabels(THREE,scene,bimPieces);
+ window.memoDaylightBaseline=sectionElements.map(e=>({...e,parts:structuredClone(e.parts)}));
+ window.memoDaylightReport=applyDaylightFacades(sectionElements,bimPieces,bimBuildings,daylightSettings);window.memoEnvelopeReport=applyEnvelopeDetail(sectionElements,bimPieces,bimBuildings,window.memoDaylightReport);
+}
+function partGeometry(part){
+ if(part.topPolygon){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(loftPositions(THREE,part),3));g.computeVertexNormals();return g;}
+ if(part.polygon.length===4&&!part.holes?.length&&!part.elevations){const p=part.polygon,signs=p.map((q,i)=>{const b=p[(i+1)%4],c=p[(i+2)%4];return (b[0]-q[0])*(c[1]-b[1])-(b[1]-q[1])*(c[0]-b[0]);});if(signs.every(x=>x>=0)||signs.every(x=>x<=0)){const v=p.map(q=>[q[0],part.z,q[1]]);v.push(...p.map(q=>[q[0],part.z+part.height,q[1]]));const ids=[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,1,2,6,1,6,5,2,3,7,2,7,6,3,0,4,3,4,7],g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(ids.flatMap(i=>v[i]),3));g.computeVertexNormals();return g;}}
+
+ if(part.elevations){const n=part.polygon.length,verts=part.polygon.map((q,i)=>[q[0],part.z+part.elevations[i],q[1]]);verts.push(...verts.map(q=>[q[0],q[1]+part.height,q[2]]));const faces=[];for(let i=1;i<n-1;i++){faces.push(0,i+1,i,n,n+i,n+i+1);}for(let i=0;i<n;i++){const j=(i+1)%n;faces.push(i,j,n+j,i,n+j,n+i);}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(faces.flatMap(i=>verts[i]),3));g.computeVertexNormals();return g;}
+
+ const shape=new THREE.Shape(part.polygon.map(v=>new THREE.Vector2(v[0],-v[1])));
+ for(const hole of part.holes||[])shape.holes.push(new THREE.Path(hole.map(v=>new THREE.Vector2(v[0],-v[1]))));
+ const geo=new THREE.ExtrudeGeometry(shape,{depth:part.height,bevelEnabled:false,steps:1});geo.rotateX(-Math.PI/2);geo.translate(0,part.z,0);return geo;
+}
+function meshForElement(e,detailed=false,lod=200){
+ const gs=e.parts.map(partGeometry),positions=[],normals=[];
+ for(const geo of gs){const g=geo.index?geo.toNonIndexed():geo;positions.push(g.attributes.position.array);normals.push(g.attributes.normal.array);if(g!==geo)g.dispose();}
+ const join=arr=>{const out=new Float32Array(arr.reduce((n,a)=>n+a.length,0));let at=0;for(const a of arr){out.set(a,at);at+=a.length;}return out;};
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(join(positions),3));g.setAttribute('normal',new THREE.BufferAttribute(join(normals),3));gs.forEach(g=>g.dispose());g.computeBoundingSphere();
+ const opacity=e.glazing?.48:e.space?(e.hideMass?.045:e.circulation?.10:detailed?(e.piece.core?.14:.26):1):1;
+ const mat=new THREE.MeshStandardMaterial({polygonOffset:!!e.slab,polygonOffsetFactor:e.slab?1:0,polygonOffsetUnits:e.slab?1:0,color:lod===100?0xdeddd6:e.color,transparent:opacity<1,opacity,depthWrite:opacity>.5,roughness:e.glazing?.12:.85,metalness:e.glazing?.18:0,side:THREE.DoubleSide});if(e.emissive){mat.emissive.setHex(0xffd590);mat.emissiveIntensity=.6;}const mesh=new THREE.Mesh(g,mat);mesh.castShadow=opacity>.5;mesh.receiveShadow=true;mesh.userData={element:e,piece:e.piece,level:e.level,type:e.role};return mesh;
+}
+function drawSectionElements(group,detail,lod=+document.getElementById('memoLOD').value){batchElements(THREE,sectionElements.filter(e=>!e.specPilot&&(lod===100||detailLevel(e)<=lod)),group,detail,meshForElement,lod);}
+
+function portalCut(poly){return parkingDesign?parkingDesign.ramps.reduce((pieces,r)=>pieces.flatMap(q=>minusCore(q,r.polygon)),[poly]).filter(q=>q.length>=3&&polyArea2(q)>.01):[poly];}
+function updateGroundOpenings(){
+ const polys=portalCut([[-330,-330],[330,-330],[330,330],[-330,330]]),gs=polys.map(p=>partGeometry(sectionPart(p,-8,8))),positions=[],normals=[];for(const g of gs){positions.push(...g.attributes.position.array);normals.push(...g.attributes.normal.array);g.dispose();}site.geometry.dispose();site.geometry=new THREE.BufferGeometry();site.geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));site.geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));site.position.y=0;
+}
+const landscapeGroup=new THREE.Group();siteContext.add(landscapeGroup);
+let landscapeLOD=-1;
+function buildLowLandscape(){
+ disposeGroup(landscapeGroup);
+ const paint=(poly,color,y=.8)=>{if(!Array.isArray(poly)||poly.length<3)return;const sh=new THREE.Shape(poly.map(q=>new THREE.Vector2(q[0],-q[1]))),g=new THREE.ShapeGeometry(sh);g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide}));m.position.y=y;m.receiveShadow=false;landscapeGroup.add(m);};
+ for(const b of bimBuildings.filter(b=>!b.parking)){paint(b.courtyard,0xe7e3d7,.7);paint(ringOffset(b.courtyard,12),0xbac4ae,.75);}
+ landscapeGroup.userData={quality:'LOD100 / simplified landscape'};
+}
+
+function buildLandscape(){
+ disposeGroup(landscapeGroup);
+ const entryCuts=gerehSystem.records.map(e=>{const t=[e.normal[1],-e.normal[0]],at=(x,y)=>[e.position[0]+t[0]*x+e.normal[0]*y,e.position[1]+t[1]*x+e.normal[1]*y];return [at(-e.width/2,0),at(e.width/2,0),at(e.width/2,e.airlockDepth+e.canopyDepth+9),at(-e.width/2,e.airlockDepth+e.canopyDepth+9)];});
+ const landscapeCut=p=>{let out=portalCut(p);for(const cut of entryCuts){const lo=[Math.min(...cut.map(q=>q[0])),Math.min(...cut.map(q=>q[1]))],hi=[Math.max(...cut.map(q=>q[0])),Math.max(...cut.map(q=>q[1]))];out=out.flatMap(poly=>Math.max(...poly.map(q=>q[0]))<lo[0]||Math.min(...poly.map(q=>q[0]))>hi[0]||Math.max(...poly.map(q=>q[1]))<lo[1]||Math.min(...poly.map(q=>q[1]))>hi[1]?[poly]:minusCore(poly,cut));}return out;};
+ let seed=38271;const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ const materials=new Map(),mat=c=>{if(!materials.has(c))materials.set(c,new THREE.MeshStandardMaterial({color:0xffffff,roughness:.95}));return materials.get(c);};
+ const mesh=(geo,c,x=0,y=0,z=0)=>{const m=new THREE.Mesh(geo,mat(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;landscapeGroup.add(m);return m;};
+ const box=(x,z,w,d,h,c,y=0)=>{if(parkingDesign&&h<1&&y<1){let last;for(const poly of landscapeCut([[x-w/2,z-d/2],[x+w/2,z-d/2],[x+w/2,z+d/2],[x-w/2,z+d/2]]))last=mesh(partGeometry(sectionPart(poly,y,h)),c);return last;}return mesh(new THREE.BoxGeometry(w,h,d),c,x,y+h/2,z);};
+ const poly=(p,c,y=1)=>{if(parkingDesign){let last;for(const q of landscapeCut(p))last=mesh(partGeometry(sectionPart(q,y,.02)),c);return last;}const sh=new THREE.Shape(p.map(q=>new THREE.Vector2(q[0],-q[1]))),g=new THREE.ShapeGeometry(sh);g.rotateX(-Math.PI/2);return mesh(g,c,0,y,0);};
+ const strip=(a,b,w,c,y=1.05)=>{const dx=b[0]-a[0],dz=b[1]-a[1],len=Math.hypot(dx,dz),nx=-dz/len*w/2,nz=dx/len*w/2;return poly([[a[0]+nx,a[1]+nz],[b[0]+nx,b[1]+nz],[b[0]-nx,b[1]-nz],[a[0]-nx,a[1]-nz]],c,y);};
+ const disk=(x,z,r,c,y=1.1)=>{const g=new THREE.CircleGeometry(r,28);g.rotateX(-Math.PI/2);return mesh(g,c,x,y,z);};
+ const tree=(x,z,scale=1,species=0)=>{if(parkingDesign?.ramps.some(r=>pointInside2([x,z],r.polygon)))return;
+  const h=(15+rnd()*10)*scale,r=(4.5+rnd()*2.6)*scale,lean=(rnd()-.5)*2;
+  if(gerehSystem.records.some(e=>{const dx=x-e.position[0],dy=z-e.position[1],along=dx*e.normal[0]+dy*e.normal[1],across=dx*e.normal[1]-dy*e.normal[0];return along>-r&&along<e.airlockDepth+e.canopyDepth+10+r&&Math.abs(across)<e.width/2+r;}))return;
+  mesh(new THREE.CylinderGeometry(.23*scale,.48*scale,h*.62,7),0x84796a,x,h*.31+1,z);
+  const greens=[0x71866c,0x91a180,0x576e60,0xa0aa82,0x7c9580,0xb1b89a];const col=greens[(species+Math.floor(rnd()*3))%greens.length];
+  for(let k=0;k<5;k++){const angle=rnd()*Math.PI*2,off=k?rnd()*r*.53:0,cy=h*(.63+rnd()*.17),cx=x+Math.cos(angle)*off+lean,cz=z+Math.sin(angle)*off;
+   const crown=mesh(new THREE.IcosahedronGeometry(r*(.63+rnd()*.25),2),col,cx,cy,cz);crown.scale.set(.8+rnd()*.45,species%3===1?1.3+rnd()*.35:.7+rnd()*.45,.8+rnd()*.4);crown.rotation.y=rnd()*Math.PI;
+   if(k<3){const a=new THREE.Vector3(x,h*.43,z),b=new THREE.Vector3(cx,cy,cz),dir=b.clone().sub(a);const branch=mesh(new THREE.CylinderGeometry(.09,.19,dir.length(),5),0x84796a,...[0,0,0]);branch.position.copy(a.add(b).multiplyScalar(.5));branch.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());}
+  }
+ };
+ const bench=(x,z,angle=0)=>{for(let i=0;i<4;i++){const q=box(x,z,6,.3,.22,0xa89274,2.0);q.rotation.y=angle;q.position.x+=Math.sin(angle)*(i-1.5)*.4;q.position.z+=Math.cos(angle)*(i-1.5)*.4;}for(const t of [-2.2,2.2])box(x+Math.cos(angle)*t,z-Math.sin(angle)*t,.22,1.7,1.8,0x666a62,.25);};
+ const lamp=(x,z)=>{mesh(new THREE.CylinderGeometry(.13,.19,13,6),0x626b62,x,6.5,z);box(x,z,2,.7,.35,0xc8c1a8,13);};
+ // Surrounding street lies outside the original 660-foot site.
+ for(let side=0;side<4;side++){
+  const at=(u,v)=>side===0?[u,v]:side===1?[-v,u]:side===2?[-u,-v]:[v,-u];
+  const rect=(u,v,w,d,h,c,y=0)=>{const q=at(u,v);return box(q[0],q[1],side%2?d:w,side%2?w:d,h,c,y);};
+  rect(0,352,788,44,.18,0x676e6c);rect(0,323,660,14,.45,0xe1ddd3);rect(0,383,788,18,.45,0xe3dfd5);
+  rect(0,330,788,.7,.55,0xc0beb3);rect(0,374,788,.7,.55,0xc0beb3);
+  rect(0,335,650,6,.03,0x91aa9a,.2);rect(0,338.6,650,.45,.04,0xf2f0df,.24);
+  for(let u=-312;u<320;u+=24){rect(u,352.5,10,.28,.03,0xe8deaa,.24);rect(u,351.5,10,.28,.03,0xe8deaa,.24);}
+  for(const u of [-308,308])for(let v=334;v<373;v+=4.5)rect(u,v,12,2.1,.035,0xf3f0e5,.25);
+  for(let u=-294;u<300;u+=30){const jitter=(rnd()-.5)*8,q=at(u+jitter,323);rect(u+jitter,323,10,6,.16,0xa7af92,.48);tree(q[0],q[1],.9+rnd()*.25,side);if((Math.round(u)+294)%60===0){const l=at(u+12,328);lamp(...l);}}
+  for(let u=-280;u<290;u+=62){const q=at(u,383);tree(q[0],q[1],.85+rnd()*.3,side+1);const b=at(u+12,380);bench(...b,side*Math.PI/2);}
+  for(let u=-306;u<310;u+=12){const a=at(u,316),b=at(u,330);strip(a,b,.08,0xc8c6be,.49);}
+ }
+ // Central pedestrian promenades follow the original two crossing axes.
+ for(const angle of [state.axis1,state.axis2]){
+  const a=angle*Math.PI/180,u=[Math.cos(a),Math.sin(a)],v=[-u[1],u[0]],lim=329/Math.max(Math.abs(u[0]),Math.abs(u[1]));
+  strip([-u[0]*lim,-u[1]*lim],[u[0]*lim,u[1]*lim],12,0xe7e1d4,.72);
+  for(let t=-lim+15;t<lim-15;t+=12)strip([u[0]*t-v[0]*6,u[1]*t-v[1]*6],[u[0]*t+v[0]*6,u[1]*t+v[1]*6],.12,0xc3beb2,.74);
+  for(let t=-lim+35;t<lim-30;t+=38){if(Math.abs(t)<35)continue;for(const sign of [-1,1]){const d=sign*11,tt=t+(rnd()-.5)*8,x=u[0]*tt+v[0]*d,z=u[1]*tt+v[1]*d;disk(x,z,3.2,0xa6af91,.76);tree(x,z,.65+rnd()*.15,Math.floor(rnd()*4));if(sign===1)bench(u[0]*(tt+12)+v[0]*d,u[1]*(tt+12)+v[1]*d,-a);}}
+ }
+ disk(0,0,19,0xd7d0c0,.79);disk(0,0,7,0xafb7a0,.80);
+ // Four distinct courtyard gardens, all clipped to their existing outlines.
+ bimBuildings.filter(b=>!b.parking).forEach((b,index)=>{
+  const court=b.courtyard,inner=ringOffset(court,12),c=centroid(court.map(q=>new THREE.Vector2(...q))),center=[c.x,c.y];
+  poly(court,0xe0d9ca,1.02);poly(inner,[0xaaba96,0xbabe9f,0xa4b69b,0x98ae9c][index],1.04);
+  const bound=ensureCCW(inner.map(q=>new THREE.Vector2(...q))).map(q=>[q.x,q.y]);
+  const clip=p=>{for(let i=0;i<bound.length&&p.length;i++)p=clipHalf(p,bound[i],bound[(i+1)%bound.length],true);return p;};
+  const horizontal=clip([[c.x-500,c.y-4],[c.x+500,c.y-4],[c.x+500,c.y+4],[c.x-500,c.y+4]]),vertical=clip([[c.x-4,c.y-500],[c.x+4,c.y-500],[c.x+4,c.y+500],[c.x-4,c.y+500]]);
+  if(horizontal.length>2)poly(horizontal,0xe7dfce,1.08);if(vertical.length>2)poly(vertical,0xe7dfce,1.09);
+  const hit=nearestPointOnPolygon(bound.map(q=>new THREE.Vector2(...q)),c),radius=Math.max(5,Math.min(19,c.distanceTo(hit.point||hit)*.4));
+  disk(c.x,c.y,radius+3,0xd9d1bc,1.12);
+  if(index===0){disk(c.x,c.y,radius*.67,0xaaa986,1.14);tree(c.x,c.y,1.05,0);}
+  if(index===1){const pond=disk(c.x,c.y,radius*.82,0x849f9f,1.14);pond.scale.set(1,.999,.55);}
+  if(index===2){disk(c.x,c.y,radius*.75,0xd8c9a6,1.14);for(let i=0;i<5;i++){const t=i*Math.PI*2/5;bench(c.x+Math.cos(t)*radius,c.y+Math.sin(t)*radius,-t+Math.PI/2);}}
+  if(index===3){disk(c.x,c.y,radius*.72,0x7d967d,1.14);for(let i=0;i<12;i++){const t=rnd()*Math.PI*2,r=rnd()*radius*.6;const rock=mesh(new THREE.IcosahedronGeometry(1+rnd()*1.5,0),0xb9b8a4,c.x+Math.cos(t)*r,1.7,c.y+Math.sin(t)*r);rock.scale.y=.45;}}
+  const xs=inner.map(p=>p[0]),ys=inner.map(p=>p[1]),trees=[];
+  for(let attempt=0;attempt<700&&trees.length<20;attempt++){const x=Math.min(...xs)+rnd()*(Math.max(...xs)-Math.min(...xs)),z=Math.min(...ys)+rnd()*(Math.max(...ys)-Math.min(...ys));if(!pointInside2([x,z],inner)||Math.abs(x-c.x)<10||Math.abs(z-c.y)<10||Math.hypot(x-c.x,z-c.y)<radius+10||trees.some(p=>Math.hypot(x-p[0],z-p[1])<17))continue;
+   const q=new THREE.Vector2(x,z),edge=nearestPointOnPolygon(bound.map(v=>new THREE.Vector2(...v)),q);if(q.distanceTo(edge.point||edge)<7)continue;
+   trees.push([x,z]);disk(x,z,3+rnd()*3,index===1?0xb7b69b:0x93a080,1.10);tree(x,z,.7+rnd()*.6,index);
+   if(trees.length%3===0)bench(x+7,z+3,rnd()*Math.PI);
+  }
+  // Loose low planting clusters soften the courtyard perimeter.
+  for(let i=0;i<bound.length;i++){const a=bound[i],d=bound[(i+1)%bound.length];for(let t=.16;t<.9;t+=.19){const x=a[0]+(d[0]-a[0])*t,z=a[1]+(d[1]-a[1])*t;const shrub=mesh(new THREE.SphereGeometry(1.25+rnd()*.4,8,6),[0xa8aa88,0x8d9c7c,0xb7b498][(i+index)%3],x,2.1,z);shrub.scale.set(1,1.1,1);}}
+ });
+ // Quiet human scale markers along the public promenades and sidewalks.
+ const person=(x,z)=>{const height=5.1+rnd()*.8,c=[0xb38676,0x657d85,0xa5a28a,0x696b67][Math.floor(rnd()*4)];mesh(new THREE.SphereGeometry(.42,7,5),0xc2a68d,x,height+.55,z);mesh(new THREE.CylinderGeometry(.47,.35,height*.4,6),c,x,height*.69+.55,z);for(const dx of [-.2,.2])mesh(new THREE.CylinderGeometry(.13,.16,height*.45,5),0x656862,x+dx,height*.225+.55,z);};
+ for(let i=0;i<36;i++){const angle=(i%2?state.axis1:state.axis2)*Math.PI/180,t=(rnd()-.5)*570,off=(rnd()-.5)*7;person(Math.cos(angle)*t-Math.sin(angle)*off,Math.sin(angle)*t+Math.cos(angle)*off);}
+ for(let i=0;i<20;i++){const t=(rnd()-.5)*590;person(i%2?t:318,i%2?318:t);}
+ // Batch static landscape geometry by material for a responsive orbit view.
+ const batches=new Map();landscapeGroup.updateMatrixWorld(true);
+ for(const m of [...landscapeGroup.children]){if(!m.isMesh)continue;let g=m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone();g.applyMatrix4(m.matrix);if(!batches.has(m.material))batches.set(m.material,[]);batches.get(m.material).push(g);landscapeGroup.remove(m);m.geometry.dispose();}
+ for(const [material,geos] of batches){const size=geos.reduce((n,g)=>n+g.attributes.position.array.length,0),positions=new Float32Array(size),normals=new Float32Array(size);let at=0;for(const g of geos){positions.set(g.attributes.position.array,at);normals.set(g.attributes.normal.array,at);at+=g.attributes.position.array.length;g.dispose();}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(positions,3));g.setAttribute('normal',new THREE.BufferAttribute(normals,3));g.computeBoundingSphere();const m=new THREE.Mesh(g,material);m.castShadow=true;m.receiveShadow=true;landscapeGroup.add(m);}
+ for(const m of [...landscapeGroup.children]){const edges=new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry,40),new THREE.LineBasicMaterial({color:0x111111,transparent:true,opacity:.13}));landscapeGroup.add(edges);}
+ landscapeGroup.userData={trees:'Seeded varied planting',courtyards:['Grove','Water garden','Social garden','Rain garden']};
+}
+
+function rebuildBim(solarOnly=false){
+ disposeGroup(bimGroup);disposeGroup(outlineGroup);disposeGroup(buildingLabels);disposeGroup(pieceGroup);clear(corridorGroup);bimBuilt=false;renderedLOD=-1;
+ if(solarOnly&&window.memoDaylightBaseline){sectionElements=window.memoDaylightBaseline.map(e=>({...e,parts:structuredClone(e.parts)}));for(const p of bimPieces)delete p.daylightFacades;window.memoDaylightReport=applyDaylightFacades(sectionElements,bimPieces,bimBuildings,daylightSettings);window.memoEnvelopeReport=applyEnvelopeDetail(sectionElements,bimPieces,bimBuildings,window.memoDaylightReport);}else prepareSectionModel();
+ gerehSystem.rebuild(bimBuildings,bimPieces,sectionElements,[state.axis1,state.axis2]);
+ gerehIfcElements=gerehSystem.components;
+ const entranceCores=new Set(gerehSystem.records.filter(e=>e.placementResolved).map(e=>e.coreId));
+ sectionElements=sectionElements.filter(e=>!(e.level===0&&e.exitDoor&&entranceCores.has(e.piece.id)));
+ const residentialPrivacy=createResidentialPrivacyBuffers(bimBuildings,bimPieces,gerehSystem.records);
+ sectionElements.push(...gerehIfcElements,...residentialPrivacy.elements);
+ const detailModel={elements:sectionElements,pieces:bimPieces,buildings:bimBuildings};window.memoParkingDuplexReport=applyParkingDuplexSection(detailModel,{homeComponents,sectionPart,homeRect});window.memoEnclosureReport=enforceUnitEnclosures(detailModel);window.memoDoorRegister=buildDoorAssemblies(detailModel);window.memoVisibleFrameReport=addVisibleFrame(detailModel);window.memoVAppliedReport=applyVToModel(detailModel,vSettings,window.memoDoorRegister);window.memoCircularCoreReport=connectCircularCore(detailModel,parkingDesign);sectionElements=detailModel.elements;
+ window.memoPrivacyReport=residentialPrivacy.report;window.memoPrivacyBuffers=residentialPrivacy.elements;
+ window.memoSpecsReport=specsCatalog.products.length===43?applySpecs(detailModel,specsCatalog):{total:sectionElements.length,mapped:0,unmapped:sectionElements.length,pilotElements:0,categories:{}};
+ let typeState;try{typeState=JSON.parse(localStorage.getItem('memo-bim-types-v1'))}catch{}window.memoBimRegistry=buildRegistry(sectionElements,typeState||undefined);
+ drawSectionElements(pieceGroup,false,+document.getElementById('memoLOD').value);renderedLOD=+document.getElementById('memoLOD').value;
+ for(const m of Object.values(mats))if(m.color)m.color.set(m.isLineBasicMaterial?0x111111:0xffffff);
+ for(const o of root.children)if(o.isLine&&o.material?.color)o.material.color.set(0x111111);
+ for(const group of [rawGroup,roadGroup,blockGroup,coreGroup,unitGroup,courtGroup,corridorGroup,shellGroup,cutGroup,blueCourtGroup,axisGroup])group.traverse(o=>{if(o.material?.color)o.material.color.set(o.isLine||o.isLineSegments?0x111111:0xffffff);});
+ const selector=document.getElementById('bimLevel'),chosen=selector.value;selector.innerHTML='<option value="all">All levels</option><option value="-1">−1 — Tunnel / parking</option>'+Array.from({length:Math.max(...bimBuildings.map(b=>b.levels))},(_,i)=>`<option value="${i}">L${i+1} — ${i<3?'Triplex':i===3?'Open terraces':'Apartments'}</option>`).join('');selector.value=chosen||'all';
+ landscapeLOD=+document.getElementById('memoLOD').value>=200?200:100;
+ if(landscapeLOD===100)buildLowLandscape();else buildLandscape();
+ for(const p of bimPieces)addPlanOutline(p.polygon.map(v=>new THREE.Vector2(...v)),.32,new THREE.LineBasicMaterial({color:0x4e665d,depthTest:false}),outlineGroup);
+ document.getElementById('bimStats').textContent='One-storey unit steps · central Core above the highest home · four open corners with monumental stairs · stepped duplex roof ring · apartments between · Courtyard triplexes and street duplexes above open parking · 65 ft building depth · all occupied rings shifted 10 ft toward courtyard · 15 ft extended fourth-floor decks and fifth-floor ceiling slabs with valley slots · Stepped duplexes and middle apartments with 12 ft open ring · Central corners joined as The Core · Privacy-screened recessed street homes · opaque vestibule sides · two-storey vertical windows · 3 ft apartment terraces · glazed corners.';
+ document.getElementById('bimInspect').textContent='Straight triplex shells · shared opaque demising walls · stepped escape stairs on both rings. Stair supports are preliminary; exit separation, protection and terrace-to-grade discharge require review. Triplex interiors remain open for later design.';
+ updateBimView();updateProposal();updateParkingReport();
+}
+function updateProposal(){
+ const f=n=>Math.round(n).toLocaleString('en-US'),ps=bimPieces.filter(p=>!p.core&&!p.office),retail=ps.filter(p=>p.retail),triplex=ps.filter(p=>!p.retail&&!p.streetDuplex),streetDuplex=ps.filter(p=>p.streetDuplex),sum=(a,fn)=>a.reduce((n,p)=>n+fn(p),0);
+ const apartments=sum(ps,p=>p.apartmentCount),duplexes=ps.filter(p=>p.levels>3&&!p.singleUpper).length,homes=triplex.length+streetDuplex.length+apartments+duplexes;
+ const data=[['Office blocks',window.memoOfficeProgram.offices,window.memoOfficeProgram.officeArea,'Chamfered corners · shared cores'],['Street duplex homes',streetDuplex.length,sum(streetDuplex,p=>p.lowerTotalArea),'Levels 2–3 · open parking below'],['Triplex homes',triplex.length,sum(triplex,p=>p.lowerTotalArea),'Levels 1–3 · planned area'],['Apartments',apartments,sum(ps,p=>p.apartmentCount*p.upperArea),'Level 4 starter homes + middle apartments'],['Roof duplex homes',duplexes,sum(ps.filter(p=>p.levels>3&&!p.singleUpper),p=>2*p.upperArea-96),'Two uppermost levels · internal stairs']];
+ document.getElementById('proposalMetrics').innerHTML=`<div class="metric-total"><div><strong>${f(homes)}</strong><small>HOMES + ${window.memoOfficeProgram.offices} OFFICE BLOCKS</small></div><div class="metric-area"><b>${f(sum(data,p=>p[2]))} SF</b><small>BASE-PLAN PROGRAM AREA*</small></div></div><div class="program-grid">${data.map(([label,count,sf,levels])=>`<div class="program-card"><div class="program-count">${f(count)}<span>${label}</span></div><div class="program-sf">${f(sf)} <small>SF TOTAL</small></div><p>${f(count?sf/count:0)} SF average</p><small>${levels}</small></div>`).join('')}</div><p class="note">Roof heights rise toward the center of the entire superblock and step down toward its four outer corners, with every adjoining upper unit stepping by one storey, from Level 4 toward the center. The two lowest upper tiers end early, leaving open terraces above Level 3. The Core is the highest point at ${parkingDesign.levels} storeys, one storey above the tallest home. Each outward end begins with a single-storey home on Level 4, followed by a duplex on Levels 4–5. The following homes start on Level 5 above the open fourth floor. Each roof duplex counts as one home across two floors. These schedule areas reference the undeformed base plans; V-shaped floor areas and corner transition allowances are not yet rescheduled. Triplex areas include planned future floors and stair allowances.</p>`;
+ document.getElementById('buildingSchedule').innerHTML='<table><thead><tr><th>Building</th><th>Triplex / street duplex</th><th>Apartments</th><th>Duplex</th></tr></thead><tbody>'+bimBuildings.filter(b=>!b.parking).map(b=>{const a=ps.filter(p=>p.building===b.id);return `<tr><td>${b.name}</td><td>${a.filter(p=>!p.retail&&!p.streetDuplex).length} / ${a.filter(p=>p.streetDuplex).length}</td><td>${sum(a,p=>p.apartmentCount)}</td><td>${a.filter(p=>p.levels>3&&!p.singleUpper).length}</td></tr>`;}).join('')+'</tbody></table>';
+ const line=(a,b)=>`<div class="area-line"><span>${a}</span><b>${b}</b></div>`;
+ document.getElementById('areaSchedule').innerHTML=line('Site area','435,600 SF / 10 AC')+data.map(d=>line(d[0],f(d[2])+' SF')).join('')+line('Middle rectangular apartments',f(sum(ps.filter(p=>!p.retail),p=>p.apartmentCount)))+line('Middle corner apartments',f(sum(retail,p=>p.apartmentCount)))+line('Rectangular roof duplexes',f(triplex.filter(p=>p.levels>3&&!p.singleUpper).length))+line('L-shaped roof duplexes',f(retail.filter(p=>p.levels>3&&!p.singleUpper).length))+line('Shared cores / L1 exits',String(window.memoOfficeProgram.cores))+line('Central parking stairs','4')+line('Monumental corner stairs','4')+line('Homes per acre',(homes/10).toFixed(1))+'<p class="note">Terraces, cores and circulation are excluded from residential area. Counts follow the stepped model. Access galleries, terrace connections and structural transfers are schematic.</p>';
+ document.getElementById('unitAreaRows').innerHTML='<table><thead><tr><th>Position</th><th>Lower home / retail SF</th><th>Middle apts</th><th>Duplex SF / levels</th></tr></thead><tbody>'+ps.map(p=>`<tr><td>${p.id}</td><td>${f(p.lowerTotalArea)}</td><td>${p.apartmentCount} × ${f(p.upperArea)} SF</td><td>${p.siteCorner?'Open corner · monumental stair':p.openTerrace?'Open roof terrace':p.singleUpper?'Single-storey home · L4':f(2*p.upperArea-96)+' SF<br>L'+(p.duplexBase+1)+'–'+p.levels}</td></tr>`).join('')+'</tbody></table>';
+}
+function updateParkingReport(){
+ const d=parkingDesign,f=n=>Math.round(n).toLocaleString('en-US');document.getElementById('parkingReport').innerHTML=`<div class="section-heading"><h3>The Circular Core</h3><span>SHARED PARKING</span></div><div class="area-line"><span>Circular hub · four stair / lift groups</span><b>4</b></div><div class="area-line"><span>Roof steps / Core storeys</span><b>${d.roofSteps} / ${d.levels}</b></div><div class="area-line"><span>Circular hub diameter</span><b>${d.radius.toFixed(1)*2}′</b></div><div class="area-line"><span>Stairs / elevators around hub</span><b>4 / 8</b></div><div class="area-line"><span>Gallery connections</span><b>${window.memoCircularCoreReport.connections.length} · ${window.memoCircularCoreReport.unresolved.length} unresolved</b></div><div class="area-line"><span>Parking decks</span><b>${d.deckCount}</b></div><div class="area-line"><span>Drawn 9′ × 18′ bays</span><b>${d.stallCount}</b></div><div class="area-line"><span>Parking deck area</span><b>${f(d.parkingArea)} SF</b></div><div class="area-line"><span>Pedestrian crossing</span><b>34′ wide · 3 storeys clear</b></div><p class="note">Fixed circular footprint independent of V angle. Four perimeter stair / twin-elevator groups; street portals → Level −1 tunnel → paired curved ramps → elevated parking decks. Parking area is separate from the housing program. Bay counts show the drawn layout; turning paths, accessible bays, structure and egress remain schematic. Arrival links match the existing 3½′ galleries and are not a code-compliance result.</p>`;
+}
+function updateBimView(){
+ const mode=document.getElementById('bimView').value,level=document.getElementById('bimLevel').value,layer=document.getElementById('sectionLayer').value,focus=document.getElementById('buildingFocus').value;
+ const lod=+document.getElementById('memoLOD').value,high=lod>=300&&mode!=='source';
+ const desiredLandscape=lod===100?100:200;
+ if(landscapeLOD!==desiredLandscape){if(desiredLandscape===100)buildLowLandscape();else buildLandscape();landscapeLOD=desiredLandscape;}
+ if(high){
+  if(!bimBuilt||renderedLOD!==lod){disposeGroup(bimGroup);disposeGroup(pieceGroup);drawSectionElements(bimGroup,true,lod);bimBuilt=true;renderedLOD=lod;}
+ }else if(renderedLOD!==lod||bimBuilt||!pieceGroup.children.length){
+  disposeGroup(bimGroup);disposeGroup(pieceGroup);drawSectionElements(pieceGroup,false,lod);bimBuilt=false;renderedLOD=lod;
+ }
+ renderer.shadowMap.needsUpdate=true;window.memoInvalidate?.();
+ pieceGroup.visible=!high;bimGroup.visible=high;
+ for(const group of [pieceGroup,bimGroup])for(const m of group.children){const e=m.userData.element;if(!e)continue;const levelMatch=level==='all'||e.level===+level||(e.hideMass&&+level<3);m.visible=!(document.getElementById('sectionCut').checked&&e.space)&&!(mode==='source'&&!document.getElementById('sectionCut').checked&&e.wall&&!e.facade&&!e.parking)&&(focus==='all'||e.building===focus)&&levelMatch&&(layer==='all'||e.layer===layer||(layer==='void'&&e.terrace)||(layer==='duplex'&&!e.parking&&e.level>=3&&!e.piece.core&&!e.circulation&&e.level>=e.piece.duplexBase)||(layer==='apartments'&&!e.parking&&e.level>=3&&!e.piece.core&&!e.circulation&&e.level<e.piece.duplexBase))&&(mode!=='slabs'||e.slab);}
+ site.visible=level!=='-1';landscapeGroup.visible=true;
+ sectionCaps.visible=document.getElementById('sectionCut').checked;
+ if(sectionCaps.visible)updateSectionCaps(high?bimGroup:pieceGroup,focus==='all'?60:centroid(bimBuildings.find(b=>b.id===focus).courtyard.map(v=>new THREE.Vector2(...v))).x);
+ outlineGroup.visible=document.getElementById('groundOutlines').checked;
+ buildingLabels.children.forEach(o=>o.visible=focus==='all'||o.userData.building===focus);
+ renderer.clippingPlanes=document.getElementById('sectionCut').checked?[new THREE.Plane(new THREE.Vector3(-1,0,0),focus==='all'?60:centroid(bimBuildings.find(b=>b.id===focus).courtyard.map(v=>new THREE.Vector2(...v))).x)]:[];
+ gerehSystem.visibility(focus,level,layer);
+}
+function geometryData(){return {version:'V-APPLIED-1',vSection:window.memoVAppliedReport,egress:vSettings.enabled?{status:'INVALIDATED_BY_V_SECTION'}:window.memoEgressRoutes,units:'feet',site:[660,660],section:{triplex:[1,2,3],void:4,lowestDuplex:[4,5],lowestApartment:[4],apartments:"Middle levels below each duplex",duplex:"Two uppermost levels per unit",maxLevel:parkingDesign.levels,roofSteps:parkingDesign.roofSteps,parking:parkingDesign,floorHeight:12,upperOpening:12,outerCantilever:6,innerCutback:6,galleryWidth:3.5},buildings:bimBuildings,pieces:[...bimPieces,...(parkingDesign?[parkingDesign.piece]:[])],elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])].map(({piece,...e})=>({...e,pieceId:piece.id})),entrances:gerehSystem.records,entranceElements:gerehIfcElements.map(({piece,...e})=>({...e,pieceId:piece.id}))};}
+
+document.getElementById('buildingFocus').addEventListener('change',()=>{const b=bimBuildings.find(b=>b.id===document.getElementById('buildingFocus').value);if(b){const c=centroid(b.courtyard.map(v=>new THREE.Vector2(...v)));camera.position.set(c.x+(b.parking?440:340),b.parking?350:240,c.y+(b.parking?440:340));controls.target.set(c.x,b.parking?90:42,c.y);}else{camera.position.set(850,540,850);controls.target.set(0,85,0);}controls.update();updateBimView();});
+for(const id of ['bimView','bimLevel','groundOutlines','sectionLayer','sectionCut'])document.getElementById(id).addEventListener('change',updateBimView);
+document.getElementById('memoLOD').addEventListener('change',()=>{
+ const lod=+document.getElementById('memoLOD').value;window.memoLOD=lod;
+ document.getElementById('bimView').value=lod>=300?'bim':'source';
+ renderer.setPixelRatio(Math.min(devicePixelRatio,lod>=300?1.25:1));
+ sun.shadow.mapSize.set(lod>=300?2048:1024,lod>=300?2048:1024);sun.shadow.map?.dispose();
+ updateBimView();window.dispatchEvent(new Event('memo-lod-change'));
+});
+document.getElementById('lockGeometry').onchange=e=>document.getElementById('setback').disabled=e.target.checked;
+const bimRay=new THREE.Raycaster(),bimMouse=new THREE.Vector2();let downPoint;
+renderer.domElement.addEventListener('pointerdown',e=>downPoint=[e.clientX,e.clientY]);
+renderer.domElement.addEventListener('pointerup',e=>{
+ if(!bimGroup.visible||!downPoint||Math.hypot(e.clientX-downPoint[0],e.clientY-downPoint[1])>5)return;
+ const r=renderer.domElement.getBoundingClientRect();bimMouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);bimRay.setFromCamera(bimMouse,camera);
+ const hit=bimRay.intersectObjects(bimGroup.children.filter(m=>m.visible&&m.isMesh))[0];if(!hit)return;
+ const selectedElement=elementFromHit(hit),p=selectedElement.piece,level=selectedElement.level,type=selectedElement.role||selectedElement.type;
+ if(p.parking){document.getElementById('bimInspect').textContent='The Core · '+type+' · '+(level===-1?'Level −1':'Level '+(level+1))+' · Redlined superblock / shared parking';return;}
+ document.getElementById('bimInspect').textContent=`${p.office?'OFFICE · ':''}${selectedElement?.dwellingId||p.id} · Level ${level+1} · ${type}${level<3&&p.carve?' · '+p.carve.name:''} | ${(p.core?p.area:level>=4?p.upperArea:level===0?p.groundArea:p.designArea).toFixed(1)} ft² / ${((p.core?p.area:level>=4?p.upperArea:level===0?p.groundArea:p.designArea)*FT*FT).toFixed(1)} m² | ${p.levels} storeys | Elevation ${level*LEVEL_HEIGHT}′ | ${p.polygon.length} boundary vertices${p.wingRank?` | Wing ${p.wingRank}: ${p.unitsAcrossCorridor} units (${p.unitsPerSide} per side)`:''}`;
+});
+function saveBim(name,data,type){const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+document.getElementById('exportJson').onclick=()=>saveBim('Superblock_geometry.json',JSON.stringify(geometryData(),null,2),'application/json');
+// Deterministic 128-bit IDs encoded using the IFC alphabet (22 characters).
+function bimGuid(key){let h=[2166136261,2246822519,3266489917,668265263];for(const c of 'MEMO-Superblock-'+key)h=h.map((v,i)=>Math.imul(v^c.charCodeAt(0),16777619+i*2)>>>0);let n=h.reduce((a,v)=>(a<<32n)|BigInt(v),0n),s='';const abc='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$';for(let i=0;i<22;i++){s=abc[Number(n&63n)]+s;n>>=6n;}return s;}
+function createIfc(){
+ const lines=[],add=(type,args)=>{lines.push(`#${lines.length+1}=${type}(${args});`);return '#'+lines.length;},q=s=>"'"+String(s??'').replaceAll("'","''")+"'",id=k=>q(bimGuid(k)),num=n=>{if(!Number.isFinite(n))throw Error('Non-finite geometry');return Number(n).toFixed(9);};
+ const pt=(x,y,z)=>add('IFCCARTESIANPOINT',`(${[x,y,z].filter(v=>v!==undefined).map(num).join(',')})`),zdir=add('IFCDIRECTION','(0.,0.,1.)'),xdir=add('IFCDIRECTION','(1.,0.,0.)'),axis=z=>add('IFCAXIS2PLACEMENT3D',`${pt(0,0,z)},${zdir},${xdir}`),origin=axis(0),place=(parent,z=0)=>add('IFCLOCALPLACEMENT',`${parent||'$'},${axis(z)}`);
+ const context=add('IFCGEOMETRICREPRESENTATIONCONTEXT',`$,'Model',3,0.0000001,${origin},$`),units=add('IFCUNITASSIGNMENT',`(${add('IFCSIUNIT','*,.LENGTHUNIT.,$,.METRE.')},${add('IFCSIUNIT','*,.AREAUNIT.,$,.SQUARE_METRE.')},${add('IFCSIUNIT','*,.VOLUMEUNIT.,$,.CUBIC_METRE.')})`);
+ const project=add('IFCPROJECT',`${id('project')},$,'MEMO Superblock - Applied V Section',$,$,$,$,(${context}),${units}`),sp=place(),site=add('IFCSITE',`${id('site')},$,'660 ft superblock',$,$,${sp},$,$,.ELEMENT.,$,$,$,$,$`);
+ const aggregate=(key,parent,children)=>{if(children.length)add('IFCRELAGGREGATES',`${id(key)},$,$,$,${parent},(${children.join(',')})`);};aggregate('project-site',project,[site]);
+ const styles=new Map();function style(e){const key=e.color+'-'+(e.glazing?'glass':e.space?'space':'solid');if(styles.has(key))return styles.get(key);const c=new THREE.Color(e.color),col=add('IFCCOLOURRGB',`$,${num(c.r)},${num(c.g)},${num(c.b)}`),shade=add('IFCSURFACESTYLESHADING',`${col},${e.glazing?'0.52':e.space?'0.55':'0.'}`),s=add('IFCSURFACESTYLE',`$,.BOTH.,(${shade})`);styles.set(key,s);return s;}
+ function rep(e){
+  const curve=poly=>{const pts=poly.map(v=>pt(v[0]*FT,-v[1]*FT));pts.push(pts[0]);return add('IFCPOLYLINE',`(${pts.join(',')})`);};
+  const solids=e.parts.map(part=>{if(part.topPolygon){const delta=part.topPolygon[0].map((x,i)=>x-part.polygon[0][i]),uniform=[...part.polygon,...(part.holes||[]).flat()].every((q,j)=>{const t=[...part.topPolygon,...(part.topHoles||[]).flat()][j];return t&&Math.hypot(t[0]-q[0]-delta[0],t[1]-q[1]-delta[1])<1e-7;});if(uniform){const outer=curve(part.polygon),holes=(part.holes||[]).map(curve),profile=holes.length?add('IFCARBITRARYPROFILEDEFWITHVOIDS',`.AREA.,$,${outer},(${holes.join(',')})`):add('IFCARBITRARYCLOSEDPROFILEDEF',`.AREA.,$,${outer}`),length=Math.hypot(...delta,part.height),direction=add('IFCDIRECTION',`(${num(delta[0]/length)},${num(-delta[1]/length)},${num(part.height/length)})`),solid=add('IFCEXTRUDEDAREASOLID',`${profile},${axis((part.z-e.level*12)*FT)},${direction},${num(length*FT)}`);add('IFCSTYLEDITEM',`${solid},(${style(e)}),$`);return solid;}const mesh=loftMesh(THREE,part),pts=mesh.vertices.map(q=>pt(q[0]*FT,-q[1]*FT,(q[2]-e.level*12)*FT)),faces=mesh.faces.map(ids=>{const loop=add('IFCPOLYLOOP',`(${[...ids].reverse().map(i=>pts[i]).join(',')})`),bound=add('IFCFACEOUTERBOUND',`${loop},.T.`);return add('IFCFACE',`(${bound})`);}),shell=add('IFCCLOSEDSHELL',`(${faces.join(',')})`),solid=add('IFCFACETEDBREP',shell);add('IFCSTYLEDITEM',`${solid},(${style(e)}),$`);return solid;}if(part.elevations){const n=part.polygon.length,coords=part.polygon.map((q,i)=>[q[0]*FT,-q[1]*FT,(part.z+part.elevations[i]-e.level*12)*FT]);coords.push(...coords.map(q=>[q[0],q[1],q[2]+part.height*FT]));const pts=coords.map(q=>add('IFCCARTESIANPOINT',`(${q.map(num).join(',')})`)),indices=[Array.from({length:n},(_,i)=>n-1-i),Array.from({length:n},(_,i)=>n+i),...Array.from({length:n},(_,i)=>[i,(i+1)%n,(i+1)%n+n,i+n])],faces=indices.map(ids=>{const loop=add('IFCPOLYLOOP',`(${ids.map(i=>pts[i]).join(',')})`),bound=add('IFCFACEOUTERBOUND',`${loop},.T.`);return add('IFCFACE',`(${bound})`);}),shell=add('IFCCLOSEDSHELL',`(${faces.join(',')})`),solid=add('IFCFACETEDBREP',shell);add('IFCSTYLEDITEM',`${solid},(${style(e)}),$`);return solid;}const outer=curve(part.polygon),holes=(part.holes||[]).map(curve),profile=holes.length?add('IFCARBITRARYPROFILEDEFWITHVOIDS',`.AREA.,$,${outer},(${holes.join(',')})`):add('IFCARBITRARYCLOSEDPROFILEDEF',`.AREA.,$,${outer}`),solid=add('IFCEXTRUDEDAREASOLID',`${profile},${axis((part.z-e.level*12)*FT)},${zdir},${num(part.height*FT)}`);add('IFCSTYLEDITEM',`${solid},(${style(e)}),$`);return solid;});
+  const r=add('IFCSHAPEREPRESENTATION',`${context},'Body',${q(e.parts.some(p=>p.elevations||p.topPolygon)?'SolidModel':'SweptSolid')},(${solids.join(',')})`);return add('IFCPRODUCTDEFINITIONSHAPE',`$,$,(${r})`);
+ }
+ const dwellingGroups=new Map(),buildings=[];
+ for(const b of bimBuildings){const bp=place(sp),building=add('IFCBUILDING',`${id(b.id)},$,${q(b.parking?'The Core':'Building '+b.name)},$,$,${bp},$,$,.ELEMENT.,$,$,$`);buildings.push(building);const storeys=[];
+  for(let l=b.minLevel??0;l<b.levels;l++){
+   const key=b.id+'-L'+(l+1),lp=place(bp,l*12*FT),st=add('IFCBUILDINGSTOREY',`${id(key)},$,${q(b.parking?(l===-1?'Level -1 - Tunnel and parking':'Level '+(l+1)+' - The Core parking'):'Level '+(l+1)+' - '+(l<3?'Triplex valley':l===3?'Open terraces':'Upper apartments'))},$,$,${lp},$,$,.ELEMENT.,${num(l*12*FT)}`);storeys.push(st);const spaces=[],elements=[];
+   for(const e of sectionElements.filter(e=>e.parts.length&&e.building===b.id&&e.level===l)){
+    let args=`${id(e.id)},$,${q(e.id)},${q(e.role)},$,${place(lp)},${rep(e)},$`;
+    if(e.type==='IFCSPACE')args+=`,.ELEMENT.,.${e.external?'EXTERNAL':'INTERNAL'}.,$`;
+    else if(e.type==='IFCSTAIRFLIGHT')args+=`,10,10,${num(.6*FT)},${num(e.tread*FT)},.STRAIGHT.`;
+    else if(e.type==='IFCDOOR')args+=e.operation==='SLIDING'?`,${num((e.doorHeight||8)*FT)},${num((e.doorWidth||4)*FT)},.DOOR.,.DOUBLE_DOOR_SLIDING.,$`:e.french?', $,$,.DOOR.,.DOUBLE_DOOR_SINGLE_SWING.,$':`,${num((e.doorHeight||8)*FT)},${num((e.doorWidth||4)*FT)},.DOOR.,${e.doubleDoor?'.DOUBLE_DOOR_SINGLE_SWING.':'.SINGLE_SWING_LEFT.'},$`;
+    else if(e.type==='IFCWINDOW')args+=',$,$,.WINDOW.,.SINGLE_PANEL.,$';
+    else if(e.type==='IFCCURTAINWALL')args+=',.NOTDEFINED.';
+    else if(e.type==='IFCMEMBER')args+=e.specPilot&&e.specProductIndex===5?',.STUD.':',.MULLION.';
+    else if(e.type==='IFCCOVERING')args+=e.specProductIndex===12?',.MEMBRANE.':e.specProductIndex===6?',.INSULATION.':',.CLADDING.';
+    else if(e.type==='IFCDISCRETEACCESSORY')args+=',.NOTDEFINED.';
+    else if(e.type==='IFCSLAB')args+=`,.${e.roof?'ROOF':e.component?'LANDING':'FLOOR'}.`;
+    else if(e.type==='IFCRAMPFLIGHT')args+=',.STRAIGHT.';
+    else if(e.type==='IFCCOLUMN')args+=',.COLUMN.';
+    else if(e.type==='IFCBUILDINGELEMENTPROXY')args+=',.NOTDEFINED.';
+    else if(e.type==='IFCRAILING')args+=',.GUARDRAIL.';
+    else if(e.type==='IFCFURNISHINGELEMENT'){}
+    else args+=e.type==='IFCTRANSPORTELEMENT'?',.ELEVATOR.':',.STANDARD.';
+    const entity=add(e.type,args);(e.space?spaces:elements).push(entity);
+    if(e.bim){const values={Family:e.bim.family,TypeId:e.bim.typeId,Mark:e.bim.mark,Revision:e.bim.revision,Finish:e.bim.finish,TargetLOD:e.bim.targetLOD,GeometryLOD:e.bim.geometryLOD,NativeValidated:'NO',ConstructionApproved:'NO'},props=Object.entries(values).map(([k,v])=>add('IFCPROPERTYSINGLEVALUE',`${q(k)},$,IFCLABEL(${q(String(v))}),$`)),ps=add('IFCPROPERTYSET',`${id(e.id+'-bim-ps')},$,'MEMO_BIMRegistry',$,(${props.join(',')})`);add('IFCRELDEFINESBYPROPERTIES',`${id(e.id+'-bim-rel')},$,$,$,(${entity}),${ps}`);const vol=e.bim.quantities.volumeFt3;if(Number.isFinite(vol)&&vol>0){const qty=add('IFCQUANTITYVOLUME',`'ExtrusionVolume','Sum of parts; not boolean union',$,${num(vol*FT**3)},$`),qs=add('IFCELEMENTQUANTITY',`${id(e.id+'-qto')},$,'MEMO_ProfileQuantities',$,$,(${qty})`);add('IFCRELDEFINESBYPROPERTIES',`${id(e.id+'-qto-rel')},$,$,$,(${entity}),${qs}`);}}
+    if(e.doorAssembly){const d=e.doorRecord||{},values={AssemblyId:e.doorAssembly,Component:e.doorComponent,ModelLOD:e.lodMin,FrameMaterial:d.frameMaterial,FrameDepthIn:d.frameDepthIn,FrameFaceIn:d.frameFaceIn,LeafThicknessIn:d.leafThicknessIn,HardwareSet:d.hardwareSet,FireRating:d.fireRating,Manufacturer:d.manufacturer,ProductModel:d.productModel,NativeValidated:'NO',DesignStatus:'SCHEMATIC'},props=Object.entries(values).filter(([,v])=>v!==undefined).map(([k,v])=>add('IFCPROPERTYSINGLEVALUE',`${q(k)},$,IFCLABEL(${q(String(v))}),$`)),ps=add('IFCPROPERTYSET',`${id(e.id+'-door-ps')},$,'MEMO_DoorAssembly',$,(${props.join(',')})`);add('IFCRELDEFINESBYPROPERTIES',`${id(e.id+'-door-rel')},$,$,$,(${entity}),${ps}`);}
+    if(e.specs){const v=e.specs,primary=v.primary||{},values={Category:v.category,SelectionStatus:v.status,Approved:'NO',NativeBRepValidated:'NO',ManufacturerCandidate:primary.manufacturer||'',ProductCandidate:primary.family||'',SourceURL:primary.source||'',HostElementId:e.specHostId||'',Prototype:e.specPilot?'YES':'NO',DimensionBasis:e.specDimensionalBasis||''},properties=Object.entries(values).map(([k,val])=>add('IFCPROPERTYSINGLEVALUE',`${q(k)},$,IFCLABEL(${q(String(val))}),$`)),ps=add('IFCPROPERTYSET',`${id(e.id+'-spec-ps')},$,'MEMO_ProductSpecification',$,(${properties.join(',')})`);add('IFCRELDEFINESBYPROPERTIES',`${id(e.id+'-spec-rel')},$,$,$,(${entity}),${ps}`);}
+    if(e.girih){const props=Object.entries({Entrance:e.designEntrance,Core:e.coreId,DesignStage:e.designStage,IndependentOperation:e.independentOperation?'YES':'N/A',ClearWidthIn:e.clearWidthIn||'N/A'}).map(([k,v])=>add('IFCPROPERTYSINGLEVALUE',`${q(k)},$,IFCLABEL(${q(String(v))}),$`));const ps=add('IFCPROPERTYSET',`${id(e.id+'-ps')},$,'MEMO_GerehEntrance',$,(${props.join(',')})`);add('IFCRELDEFINESBYPROPERTIES',`${id(e.id+'-ps-rel')},$,$,$,(${entity}),${ps}`);}
+
+    if(e.space){
+     const props=[add('IFCPROPERTYSINGLEVALUE',`'SourcePlanPosition',$,IFCLABEL(${q(e.piece.id)}),$`),add('IFCPROPERTYSINGLEVALUE',`'SectionLayer',$,IFCLABEL(${q(e.layer)}),$`)];
+     if(e.piece.carve&&e.level<3)props.push(add('IFCPROPERTYSINGLEVALUE',`'CarvingDesign',$,IFCLABEL(${q(e.piece.carve.signature)}),$`));
+     if(e.retail)props.push(add('IFCPROPERTYSINGLEVALUE',`'Occupancy',$,IFCLABEL('RETAIL'),$`));
+     if(e.dwellingId){props.push(add('IFCPROPERTYSINGLEVALUE',`'DwellingId',$,IFCLABEL(${q(e.dwellingId)}),$`));if(e.layer==='valley'||e.dwellingId.endsWith('-DUPLEX')){if(!dwellingGroups.has(e.dwellingId))dwellingGroups.set(e.dwellingId,[]);dwellingGroups.get(e.dwellingId).push(entity);}}
+     const set=add('IFCPROPERTYSET',`${id(e.id+'-pset')},$,'MEMO_HousingSection',$,(${props.join(',')})`);add('IFCRELDEFINESBYPROPERTIES',`${id(e.id+'-props')},$,$,$,(${entity}),${set}`);
+    }
+   }
+   aggregate(key+'-spaces',st,spaces);if(elements.length)add('IFCRELCONTAINEDINSPATIALSTRUCTURE',`${id(key+'-elements')},$,$,$,(${elements.join(',')}),${st}`);
+  }aggregate(b.id+'-storeys',building,storeys);
+ }aggregate('site-buildings',site,buildings);
+ for(const [dwelling,members] of dwellingGroups){const zone=add('IFCZONE',`${id(dwelling)},$,${q(dwelling)},${q(dwelling.endsWith('-DUPLEX')?'One dwelling spanning two roof levels':'One dwelling spanning Levels 1-3')},${q(dwelling.endsWith('-DUPLEX')?'DUPLEX':'TRIPLEX')},$`);add('IFCRELASSIGNSTOGROUP',`${id(dwelling+'-members')},$,$,$,(${members.join(',')}),$,${zone}`);}
+ return `ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('Schematic valley housing - structural transfer and egress unresolved'),'2;1');\nFILE_NAME('MEMO_Superblock_Valley.ifc','${new Date().toISOString()}',('MEMO Studio'),('MEMO Studio'),'MEMO Section Generator','MEMO Section Generator','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n${lines.join('\n')}\nENDSEC;\nEND-ISO-10303-21;`;
+}
+
+document.getElementById('exportIfc').onclick=()=>{try{saveBim('Superblock_IFC_Base.ifc',createIfc(),'application/x-step');}catch(e){document.getElementById('bimInspect').textContent='Export failed: '+e.message;}};
+
+function sync(){
+  state.setback=+document.getElementById('setback').value;
+  state.height=LEVEL_HEIGHT;
+
+  document.getElementById('oSet').textContent=state.setback+'′';
+  document.getElementById('roadWidthReadout').textContent=(state.setback*2)+'′';
+
+  build();
+  rebuildBim();
+  window.memoSpecsWorkspace?.refresh();
+}
+
+['setback'].forEach(id=>document.getElementById(id).addEventListener('change',sync));
+document.getElementById('showAxes').addEventListener('change',e=>axisGroup.visible=e.target.checked);
+document.getElementById('showRoads').addEventListener('change',e=>roadGroup.visible=e.target.checked);
+document.getElementById('showRaw').addEventListener('change',e=>rawGroup.visible=e.target.checked);
+document.getElementById('showCourts').addEventListener('change',e=>courtGroup.visible=e.target.checked);
+document.getElementById('showCorridor').addEventListener('change',e=>corridorGroup.visible=e.target.checked);
+document.getElementById('showShells').addEventListener('change',e=>shellGroup.visible=e.target.checked);
+document.getElementById('showCuts').addEventListener('change',e=>cutGroup.visible=e.target.checked);
+document.getElementById('showBlueCourts').addEventListener('change',e=>blueCourtGroup.visible=e.target.checked);
+
+document.getElementById('showGrid').addEventListener('change',e=>gridGroup.visible=e.target.checked);
+
+document.getElementById('axon').onclick=()=>{
+  camera.position.set(850,540,850);controls.target.set(0,85,0);controls.update();
+};
+document.getElementById('plan').onclick=()=>{
+  camera.position.set(0,1250,.01);controls.target.set(0,0,0);controls.update();
+};
+document.getElementById('low').onclick=()=>{
+  camera.position.set(760,210,620);controls.target.set(0,35,0);controls.update();
+};
+document.getElementById('reset').onclick=()=>{
+  if(!document.getElementById('lockGeometry').checked) document.getElementById('setback').value=18;
+  sync();
+  camera.position.set(850,540,850);controls.target.set(0,85,0);controls.update();
+};
+
+document.getElementById('openEvolution').onclick=async()=>{
+ if(window.memoVAppliedReport?.enabled){alert('The V-section is applied. This analysis uses the previous vertical geometry and is paused until the new circulation and service routes are coordinated. Use the main 3D, unit focus, drawing set and coordinated structure views for the current geometry.');return;}
+ window.memoWalk?.stop();
+ window.memoEgress?.close();window.memoCoordination?.close();
+ const {mountEvolution}=await import('/American-Superblock/evolution-workspace.js');
+ mountEvolution({THREE,scene,camera,controls,renderer,architecture:root,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings,entrances:gerehSystem.records}),meshForElement});
+};
+document.getElementById('openGeometry').onclick=()=>{
+ window.memoEgress?.close();window.memoCoordination?.close();
+ mountGeometryEngine({THREE,scene,camera,controls,architecture:root,getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]}),siteElements:()=>{
+  const out=[];root.updateMatrixWorld(true);
+  for(const [name,group] of [['LANDSCAPE',landscapeGroup],['SITE',site],['STREETS',roadGroup]]){
+   let ordinal=0;group.traverse(o=>{if(!o.isMesh||!o.geometry?.attributes.position)return;
+    const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();g.applyMatrix4(o.matrixWorld);
+    out.push({id:'CONTEXT:'+name+':batch:'+ordinal++,building:'SITE',level:0,type:'IFCGEOGRAPHICELEMENT',site:name!=='LANDSCAPE',landscape:name==='LANDSCAPE',role:name+' render batch; individual object identity unresolved',parts:[],nativeShape:{type:'render_mesh',verticesSceneFt:Array.from(g.attributes.position.array),identity:'Grouped render batch, not individual BIM objects'}});g.dispose();
+   });
+  }return out;
+ }});
+};
+document.getElementById('openSpecs').onclick=()=>specsCatalog.products.length===43?mountSpecsWorkspace({THREE,scene,camera,controls,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings}),meshForElement,catalog:specsCatalog}):alert('Specification study could not load. Reload the page; the architecture model remains available.');
+document.getElementById('openDoors').onclick=async()=>{
+ const {mountDoors}=await import('/American-Superblock/door-workspace.js');
+ mountDoors({THREE,scene,camera,controls,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings,entrances:gerehSystem.records})});
+};
+document.getElementById('openEgress').onclick=async()=>{
+ if(window.memoVAppliedReport?.enabled){alert('The V-section is applied. This analysis uses the previous vertical geometry and is paused until the new circulation and service routes are coordinated. Use the main 3D, unit focus, drawing set and coordinated structure views for the current geometry.');return;}
+ window.memoCoordination?.close();
+ const {mountEgress}=await import('/American-Superblock/egress-workspace.js');
+ mountEgress({THREE,scene,camera,renderer,controls,architecture:root,siteContext,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings}),getPickables:()=>[pieceGroup,bimGroup].filter(g=>g.visible).flatMap(g=>g.children.filter(m=>m.visible&&m.isMesh))});
+};
+document.getElementById('openPresentation').onclick=async()=>{
+ window.memoWalk?.stop();window.memoEgress?.close();window.memoCoordination?.close();
+ const {mountPresentationLab}=await import('/American-Superblock/presentation-lab.js');
+ mountPresentationLab({getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2],entrances:gerehSystem.records}),openDrawings:()=>document.getElementById('openDocumentation').click()});
+};
+document.getElementById('openDocumentation').onclick=async()=>{
+ window.memoEgress?.close();
+ window.memoCoordination?.close();
+ const {mountDocumentation}=await import('/American-Superblock/documentation.js');
+ mountDocumentation(()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]}),specsCatalog);
+};
+document.getElementById('openCoordination').onclick=async()=>{
+ window.memoEgress?.close();siteContext.visible=true;landscapeGroup.visible=true;site.visible=true;
+ const {mountCoordination}=await import('/American-Superblock/coordination-3d.js');
+ await mountCoordination({THREE,scene,camera,renderer,controls,architecture:root,getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]})});
+};
+document.getElementById('openLife').onclick=async()=>{
+ if(window.memoVAppliedReport?.enabled){alert('The V-section is applied. This analysis uses the previous vertical geometry and is paused until the new circulation and service routes are coordinated. Use the main 3D, unit focus, drawing set and coordinated structure views for the current geometry.');return;}
+ window.memoEgress?.close();window.memoCoordination?.close();
+ const {mountLife}=await import('/American-Superblock/life-simulation.js');
+ mountLife({THREE,scene,camera,controls,renderer,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings,entrances:gerehSystem.records})});
+};
+document.getElementById('openStructure').onclick=async()=>{
+ window.memoEgress?.close();
+ window.memoCoordination?.close();
+ const {mountStructure}=await import('/American-Superblock/structure-workspace.js');
+ await mountStructure({THREE,scene,getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]})});
+};
+document.getElementById('openMEP').onclick=async()=>{
+ if(window.memoVAppliedReport?.enabled){alert('The V-section is applied. This analysis uses the previous vertical geometry and is paused until the new circulation and service routes are coordinated. Use the main 3D, unit focus, drawing set and coordinated structure views for the current geometry.');return;}
+ window.memoEgress?.close();
+ window.memoCoordination?.close();
+ if(window.memoMEP){window.memoMEP.show();return;}
+ const {mountMEP}=await import('/American-Superblock/mep-workspace.js');
+ await mountMEP({THREE,scene,camera,renderer,architecture:root,getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]})});
+};
+const vSectionButton=document.createElement('button');vSectionButton.id='openVSection';vSectionButton.textContent='V section · Applied';document.getElementById('openCoordination').parentElement.prepend(vSectionButton);vSectionButton.onclick=async()=>{const {mountVSection}=await import('/American-Superblock/v-section-workspace.js');mountVSection({THREE,getModel:()=>({elements:sectionElements,pieces:bimPieces,buildings:bimBuildings}),onApply:settings=>{Object.assign(vSettings,settings);window.memoCoordination?.close();window.memoModelControls?.restore();sync();updateBimView();window.memoInvalidate?.();}});};
+document.getElementById('setback').disabled=true;
+sync();
+mountModelControls({THREE,scene,camera,controls,renderer,getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])],pieces:bimPieces,buildings:bimBuildings,axes:[state.axis1,state.axis2]}),meshForElement,repaint:()=>{disposeGroup(pieceGroup);disposeGroup(bimGroup);bimBuilt=false;updateBimView();}});
+window.memoInspectDoor=id=>{
+ const d=window.memoDoorRegister.records.find(d=>d.id===id);if(!d)return;
+ window.memoEvolution?.close?.();window.memoCoordination?.close?.();window.memoModelControls?.restore();document.getElementById('unitFocusPanel').hidden=true;
+ for(const id of ['docsWorkspace','structureWorkspace']){const p=document.getElementById(id);if(p)p.hidden=true;}
+ root.visible=true;document.getElementById('buildingFocus').value=d.building;document.getElementById('bimLevel').value=String(d.level);document.getElementById('sectionLayer').value='all';document.getElementById('sectionCut').checked=false;
+ const lod=document.getElementById('memoLOD');lod.value='350';lod.dispatchEvent(new Event('change'));
+ const n=d.n,u=d.u;camera.near=.1;camera.updateProjectionMatrix();controls.minDistance=.5;
+ camera.position.set(d.center[0]-n[0]*18+u[0]*5,d.z+6,d.center[1]-n[1]*18+u[1]*5);controls.target.set(d.center[0],d.z+4,d.center[1]);controls.update();window.memoInvalidate?.();
+};
+
+document.getElementById('topBimRegistry').disabled=false;
+document.getElementById('topBimRegistry').onclick=()=>mountBimWorkspace({getModel:()=>({elements:[...sectionElements,...(window.memoEvolution?.getAppliedElements()||[])]}),inspect:e=>{
+ if(e.doorAssembly){window.memoInspectDoor(e.doorAssembly);return;}
+ window.memoEvolution?.close?.();window.memoCoordination?.close?.();window.memoMEP?.close?.();window.memoModelControls?.restore();root.visible=true;
+ const pts=e.parts.flatMap(p=>p.polygon||[]);if(!pts.length)return;
+ document.getElementById('buildingFocus').value=e.building;document.getElementById('bimLevel').value=String(e.level);document.getElementById('sectionCut').checked=false;
+ const lod=document.getElementById('memoLOD');lod.value='350';lod.dispatchEvent(new Event('change'));
+ const x=(Math.min(...pts.map(p=>p[0]))+Math.max(...pts.map(p=>p[0])))/2,y=(Math.min(...pts.map(p=>p[1]))+Math.max(...pts.map(p=>p[1])))/2,z=e.parts[0].z+e.parts[0].height/2;
+ const size=Math.max(8,Math.max(...pts.map(p=>p[0]))-Math.min(...pts.map(p=>p[0])),Math.max(...pts.map(p=>p[1]))-Math.min(...pts.map(p=>p[1])));
+ camera.position.set(x+size,z+size*.7,y+size);controls.target.set(x,z,y);controls.update();window.memoInvalidate?.();
+}});
+
+
+const walkButton=document.createElement('button');walkButton.id='openWalkthrough';walkButton.textContent='Walkthrough · WASD';document.getElementById('openCoordination').parentElement.append(walkButton);
+const {mountWalkthrough}=await import('/American-Superblock/walkthrough.js');window.memoWalk=mountWalkthrough({THREE,camera,controls,renderer,button:walkButton});
+let renderDirty=true,lastRender=0,lastShadowRoot=root.visible;
+window.memoInvalidate=()=>{renderDirty=true;};
+controls.addEventListener('change',window.memoInvalidate);
+for(const event of ['click','input','change','pointerup','keydown','keyup'])document.addEventListener(event,window.memoInvalidate,{passive:true});
+new MutationObserver(window.memoInvalidate).observe(document.body,{childList:true,subtree:true,attributes:true,characterData:true});
+function animate(){
+ requestAnimationFrame(animate);
+ if(document.hidden||document.getElementById('docsWorkspace')?.hidden===false||document.getElementById('structureWorkspace')?.hidden===false)return;
+ if(window.memoWalk?.active){window.memoWalk.update();renderDirty=true;}else controls.update();
+ if(root.visible!==lastShadowRoot){lastShadowRoot=root.visible;renderer.shadowMap.needsUpdate=true;renderDirty=true;}
+ const now=performance.now(),interval=window.memoMEP?.group.visible?100:33;
+ if(!renderDirty||now-lastRender<interval)return;
+ renderDirty=false;lastRender=now;renderer.render(scene,camera);
+}
+animate();
+
+addEventListener('resize',()=>{
+  camera.aspect=viewSize().width/viewSize().height;
+  camera.updateProjectionMatrix();
+  window.memoInvalidate?.();
+  renderer.setSize(viewSize().width,viewSize().height);
+});
+// Workspace panels change #scene width/height without a window resize.
+// Keep camera aspect and WebGL drawing buffer matched to the responsive layout.
+new ResizeObserver(()=>window.dispatchEvent(new Event('resize'))).observe(document.getElementById('scene'));
+</script>
+</body>
+</html>

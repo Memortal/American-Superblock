@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-26",
+  "status": "Integrated foundation; native deployment blocked",
+  "architecture": {
+    "sourceElements": 18467,
+    "plainEntranceComponents": 800,
+    "gerehOrnaments": 0
+  },
+  "fullCapture": {
+    "elements": 120337,
+    "uniqueShapes": 87453,
+    "captureMs": 8200.8,
+    "mep": 88300,
+    "generatedStructure": 14652,
+    "siteMeshBatches": 54,
+    "nativeValidated": 0,
+    "approximated": 88354,
+    "unresolved": 31983
+  },
+  "revision": {
+    "warmCaptureMs": 1462.1,
+    "unchanged": 18467,
+    "descriptorReuseRatio": 1
+  },
+  "tests": {
+    "passed": 24,
+    "skipped": 2,
+    "skips": [
+      "native USD roundtrip: missing usd_brep and pxr",
+      "IFC roundtrip: missing IfcOpenShell"
+    ]
+  },
+  "native": {
+    "usd": false,
+    "ifc": false,
+    "step": false,
+    "hostProvisioned": false
+  },
+  "limitations": [
+    "Full native conversion is not complete.",
+    "STEP and native tessellation are not implemented.",
+    "MEP descriptors are conceptual route/equipment adapters, not validated native solids.",
+    "Legacy positional IDs are not guaranteed stable across topology changes.",
+    "All-system capture exceeds the native service 100000-element request limit; submit scoped selections.",
+    "Remote Life Lab AI inference disabled after deployment security review; deterministic simulation preserved."
+  ]
+}
