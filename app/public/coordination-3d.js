@@ -5,11 +5,11 @@ const palette={Architecture:0xe7e4dc,Glazing:0xa8ced6,Slabs:0x879caf,Beams:0xc59
 export function prismPositions(THREE,part){
  if(part.topPolygon)return loftPositions(THREE,part);
  const clean=r=>r.length>2&&Math.hypot(r[0][0]-r.at(-1)[0],r[0][1]-r.at(-1)[1])<1e-7?r.slice(0,-1):r;
- const rings=[clean(part.polygon),...(part.holes||[]).map(clean)],flat=rings.flat(),faces=THREE.ShapeUtils.triangulateShape(rings[0].map(q=>new THREE.Vector2(...q)),rings.slice(1).map(r=>r.map(q=>new THREE.Vector2(...q)))),out=[];
+ const rings=[clean(part.polygon),...(part.holes||[]).map(clean)].map((ring,i)=>{const r=ring.slice(),signed=r.reduce((s,q,j)=>s+q[0]*r[(j+1)%r.length][1]-q[1]*r[(j+1)%r.length][0],0);return (i===0&&signed<0)||(i>0&&signed>0)?r.reverse():r;}),flat=rings.flat(),faces=THREE.ShapeUtils.triangulateShape(rings[0].map(q=>new THREE.Vector2(...q)),rings.slice(1).map(r=>r.map(q=>new THREE.Vector2(...q)))),out=[];
  const elevation=q=>{if(!part.elevations)return part.z;const [a,b,c]=part.polygon,dx=b[0]-a[0],dy=b[1]-a[1],ex=c[0]-a[0],ey=c[1]-a[1],det=dx*ey-dy*ex;if(Math.abs(det)<1e-9)return part.z;const x=q[0]-a[0],y=q[1]-a[1],s=(x*ey-y*ex)/det,t=(dx*y-dy*x)/det;return part.z+part.elevations[0]+s*(part.elevations[1]-part.elevations[0])+t*(part.elevations[2]-part.elevations[0])};
  const at=(q,top)=>[q[0],elevation(q)+(top?part.height:0),q[1]],tri=(a,b,c)=>out.push(...a,...b,...c);
  for(const f of faces){tri(...f.map(i=>at(flat[i],false)));tri(...[...f].reverse().map(i=>at(flat[i],true)))}
- for(const r of rings)for(let i=0;i<r.length;i++){const a=r[i],b=r[(i+1)%r.length];tri(at(a,false),at(b,false),at(b,true));tri(at(a,false),at(b,true),at(a,true))}return out;
+ for(const r of rings)for(let i=0;i<r.length;i++){const a=r[i],b=r[(i+1)%r.length];tri(at(a,false),at(b,true),at(b,false));tri(at(a,false),at(a,true),at(b,true))}return out;
 }
 export async function mountCoordination({THREE,scene,camera,renderer,controls,architecture,getModel}){
  if(window.memoCoordination){window.memoCoordination.show();return;}

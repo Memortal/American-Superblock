@@ -158,3 +158,7 @@ body.gereh-mode #scene{right:0}
 #modelControls .memo-lod-picker{display:flex;align-items:center;gap:6px;flex-shrink:0}
 #modelControls button{flex-shrink:0}
 @media(max-width:760px){#modelControls{padding:0 8px;gap:6px}#modelControls .memo-lod-picker{font-size:0}#modelControls select{font-size:11px}#detailNote{display:none}}
+
+/* Render controls stay readable and reachable in the scrolling toolbar. */
+#modelControls .memo-display-option{display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:12px;cursor:pointer}
+#modelControls .memo-display-option input{margin:0;accent-color:#213e30}

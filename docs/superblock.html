@@ -79,7 +79,7 @@ summary{font-size:12px;font-weight:600;cursor:pointer}.report-footer{font-size:9
 <div id="scene"></div>
 
 <header class="masthead"><div class="wordmark">memo<span>studio</span><i></i></div><div class="project-heading"><span>URBAN HOUSING / CONCEPT PROPOSAL</span><strong>American Superblock</strong></div><div class="project-tag">660 × 660 FT <span>10.00 ACRES</span></div></header>
-<div id="modelControls" role="toolbar" aria-label="Model detail and inspection"><label class="memo-lod-picker" for="memoLOD">MODEL LOD <select id="memoLOD" aria-label="Model level of detail"><option value="100" selected>100 · Concept</option><option value="200">200 · Schematic</option><option value="300">300 · BIM</option><option value="350">350 · Interfaces</option><option value="400">400 · Available detail</option></select></label><button id="topDoorSchedule" disabled>Door schedule</button><button id="topUnitFocus" disabled>Focus unit</button><button id="topBimRegistry" disabled>BIM Types &amp; Schedules</button><span id="detailNote">Loading model…</span></div>
+<div id="modelControls" role="toolbar" aria-label="Model detail and inspection"><label class="memo-lod-picker" for="memoLOD">MODEL LOD <select id="memoLOD" aria-label="Model level of detail"><option value="100" selected>100 · Concept</option><option value="200">200 · Schematic</option><option value="300">300 · BIM</option><option value="350">350 · Interfaces</option><option value="400">400 · Available detail</option></select></label><label class="memo-display-option"><input id="showModelEdges" type="checkbox"> Model edges</label><label class="memo-display-option"><input id="showShadows" type="checkbox" checked> Shadows</label><button id="topDoorSchedule" disabled>Door schedule</button><button id="topUnitFocus" disabled>Focus unit</button><button id="topBimRegistry" disabled>BIM Types &amp; Schedules</button><span id="detailNote">Loading model…</span></div>
 <div class="view-tools" role="toolbar" aria-label="Model tools; swipe or scroll horizontally for more" tabindex="0"><button id="openLife" hidden style="display:none">Life Lab ✳</button><button id="openEvolution" style="background:#294c37;color:white">Couple Living Lab ✳</button><button id="openGeometry" style="background:#173a2e;color:white">Geometry Engine ↗</button><button id="openCoordination">Coordinated 3D ↗</button><button id="openStructure">Structure ↗</button><button id="openSpecs" style="background:#284b3b;color:#fff">Specs · 43 products ↗</button><button id="openMEP">MEP systems ↗</button><button id="openPresentation" style="background:#262e2a;color:white">Presentation Lab ↗</button><button id="openDocumentation">Drawing set ↗</button><button id="openEgress">Unit egress ↗</button><button id="openDoors">Doors / graph ↗</button><button onclick="document.getElementById('axon').click()">3D view</button><button onclick="document.getElementById('plan').click()">Site plan</button><button onclick="document.getElementById('low').click()">Street view</button><button onclick="document.getElementById('sectionLayer').value='parking';const e=document.getElementById('buildingFocus');e.value='CORE';e.dispatchEvent(new Event('change'))">Parking / tunnel</button><button onclick="const e=document.getElementById('bimView');e.value=e.value==='source'?'bim':'source';e.dispatchEvent(new Event('change'))">Massing / BIM</button></div>
 <aside class="panel">
 <div class="eyebrow">DESIGN AT A GLANCE <span>SECTION STUDY / 04</span></div>
@@ -229,7 +229,9 @@ camera.position.set(760,360,760);
 
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(viewSize().width,viewSize().height);
-renderer.setPixelRatio(Math.min(devicePixelRatio,1));
+// Keep fine edges legible on high-DPI screens without an unbounded drawing buffer.
+function updateRenderResolution(){const {width,height}=viewSize();renderer.setPixelRatio(Math.min(devicePixelRatio||1,2,Math.sqrt(4000000/(width*height))));}
+updateRenderResolution();
 renderer.shadowMap.enabled=true;renderer.localClippingEnabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -248,10 +250,10 @@ scene.add(new THREE.HemisphereLight(0xffffff,0xb8b8b8,1.3));
 const sun=new THREE.DirectionalLight(0xffffff,3.6);
 sun.position.set(-420,720,320);
 sun.castShadow=true;
-sun.shadow.mapSize.set(1024,1024);
+sun.shadow.mapSize.set(2048,2048);
 renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
 sun.shadow.camera.near=1;sun.shadow.camera.far=2200;
-sun.shadow.bias=-.00012;sun.shadow.normalBias=.12;sun.shadow.radius=2;
+sun.shadow.bias=-.0001;sun.shadow.normalBias=.25;sun.shadow.radius=2;
 sun.shadow.camera.left=-610;sun.shadow.camera.right=610;
 sun.shadow.camera.top=610;sun.shadow.camera.bottom=-610;
 sun.shadow.camera.updateProjectionMatrix();
@@ -1770,14 +1772,24 @@ function prepareSectionModel(){
  window.memoDaylightBaseline=sectionElements.map(e=>({...e,parts:structuredClone(e.parts)}));
  window.memoDaylightReport=applyDaylightFacades(sectionElements,bimPieces,bimBuildings,daylightSettings);window.memoEnvelopeReport=applyEnvelopeDetail(sectionElements,bimPieces,bimBuildings,window.memoDaylightReport);
 }
+// Fast prisms use model XY coordinates as Three.js XZ. That reflection needs
+// outward face winding for either clockwise or counterclockwise source rings.
+function renderFacePositions(polygon,vertices,indices){
+ const ccw=polygon.reduce((a,p,i)=>a+p[0]*polygon[(i+1)%polygon.length][1]-polygon[(i+1)%polygon.length][0]*p[1],0)>0,out=[];
+ for(let i=0;i<indices.length;i+=3){const face=indices.slice(i,i+3);if(ccw)face.reverse();for(const j of face)out.push(...vertices[j]);}return out;
+}
 function partGeometry(part){
  if(part.topPolygon){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(loftPositions(THREE,part),3));g.computeVertexNormals();return g;}
- if(part.polygon.length===4&&!part.holes?.length&&!part.elevations){const p=part.polygon,signs=p.map((q,i)=>{const b=p[(i+1)%4],c=p[(i+2)%4];return (b[0]-q[0])*(c[1]-b[1])-(b[1]-q[1])*(c[0]-b[0]);});if(signs.every(x=>x>=0)||signs.every(x=>x<=0)){const v=p.map(q=>[q[0],part.z,q[1]]);v.push(...p.map(q=>[q[0],part.z+part.height,q[1]]));const ids=[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,1,2,6,1,6,5,2,3,7,2,7,6,3,0,4,3,4,7],g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(ids.flatMap(i=>v[i]),3));g.computeVertexNormals();return g;}}
+ if(part.polygon.length===4&&!part.holes?.length&&!part.elevations){const p=part.polygon,signs=p.map((q,i)=>{const b=p[(i+1)%4],c=p[(i+2)%4];return (b[0]-q[0])*(c[1]-b[1])-(b[1]-q[1])*(c[0]-b[0]);});if(signs.every(x=>x>=0)||signs.every(x=>x<=0)){const v=p.map(q=>[q[0],part.z,q[1]]);v.push(...p.map(q=>[q[0],part.z+part.height,q[1]]));const ids=[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,1,2,6,1,6,5,2,3,7,2,7,6,3,0,4,3,4,7],g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(renderFacePositions(part.polygon,v,ids),3));g.computeVertexNormals();return g;}}
 
- if(part.elevations){const n=part.polygon.length,verts=part.polygon.map((q,i)=>[q[0],part.z+part.elevations[i],q[1]]);verts.push(...verts.map(q=>[q[0],q[1]+part.height,q[2]]));const faces=[];for(let i=1;i<n-1;i++){faces.push(0,i+1,i,n,n+i,n+i+1);}for(let i=0;i<n;i++){const j=(i+1)%n;faces.push(i,j,n+j,i,n+j,n+i);}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(faces.flatMap(i=>verts[i]),3));g.computeVertexNormals();return g;}
+ if(part.elevations){const n=part.polygon.length,verts=part.polygon.map((q,i)=>[q[0],part.z+part.elevations[i],q[1]]);verts.push(...verts.map(q=>[q[0],q[1]+part.height,q[2]]));const faces=[];for(let i=1;i<n-1;i++){faces.push(0,i+1,i,n,n+i,n+i+1);}for(let i=0;i<n;i++){const j=(i+1)%n;faces.push(i,j,n+j,i,n+j,n+i);}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(renderFacePositions(part.polygon,verts,faces),3));g.computeVertexNormals();return g;}
 
- const shape=new THREE.Shape(part.polygon.map(v=>new THREE.Vector2(v[0],-v[1])));
- for(const hole of part.holes||[])shape.holes.push(new THREE.Path(hole.map(v=>new THREE.Vector2(v[0],-v[1]))));
+ // Normalize holes explicitly; the bundled extruder only corrects them when
+ // it also reverses the outer contour. Mixed input winding must work either way.
+ const contour=part.polygon.map(v=>new THREE.Vector2(v[0],-v[1]));
+ if(!THREE.ShapeUtils.isClockWise(contour))contour.reverse();
+ const shape=new THREE.Shape(contour);
+ for(const hole of part.holes||[]){const points=hole.map(v=>new THREE.Vector2(v[0],-v[1]));if(THREE.ShapeUtils.isClockWise(points))points.reverse();shape.holes.push(new THREE.Path(points));}
  const geo=new THREE.ExtrudeGeometry(shape,{depth:part.height,bevelEnabled:false,steps:1});geo.rotateX(-Math.PI/2);geo.translate(0,part.z,0);return geo;
 }
 function meshForElement(e,detailed=false,lod=200){
@@ -1786,9 +1798,9 @@ function meshForElement(e,detailed=false,lod=200){
  const join=arr=>{const out=new Float32Array(arr.reduce((n,a)=>n+a.length,0));let at=0;for(const a of arr){out.set(a,at);at+=a.length;}return out;};
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(join(positions),3));g.setAttribute('normal',new THREE.BufferAttribute(join(normals),3));gs.forEach(g=>g.dispose());g.computeBoundingSphere();
  const opacity=e.glazing?.48:e.space?(e.hideMass?.045:e.circulation?.10:detailed?(e.piece.core?.14:.26):1):1;
- const mat=new THREE.MeshStandardMaterial({polygonOffset:!!e.slab,polygonOffsetFactor:e.slab?1:0,polygonOffsetUnits:e.slab?1:0,color:lod===100?0xdeddd6:e.color,transparent:opacity<1,opacity,depthWrite:opacity>.5,roughness:e.glazing?.12:.85,metalness:e.glazing?.18:0,side:THREE.DoubleSide});if(e.emissive){mat.emissive.setHex(0xffd590);mat.emissiveIntensity=.6;}const mesh=new THREE.Mesh(g,mat);mesh.castShadow=opacity>.5;mesh.receiveShadow=true;mesh.userData={element:e,piece:e.piece,level:e.level,type:e.role};return mesh;
+ const mat=new THREE.MeshStandardMaterial({polygonOffset:!!e.slab,polygonOffsetFactor:e.slab?1:0,polygonOffsetUnits:e.slab?1:0,color:lod===100?0xdeddd6:e.color,transparent:opacity<1,opacity,depthWrite:opacity>.5,roughness:e.glazing?.12:.85,metalness:e.glazing?.18:0,side:THREE.DoubleSide,shadowSide:THREE.BackSide});if(e.emissive){mat.emissive.setHex(0xffd590);mat.emissiveIntensity=.6;}const mesh=new THREE.Mesh(g,mat);mesh.castShadow=opacity>.5;mesh.receiveShadow=true;mesh.userData={element:e,piece:e.piece,level:e.level,type:e.role};return mesh;
 }
-function drawSectionElements(group,detail,lod=+document.getElementById('memoLOD').value){batchElements(THREE,sectionElements.filter(e=>!e.specPilot&&(lod===100||detailLevel(e)<=lod)),group,detail,meshForElement,lod);}
+function drawSectionElements(group,detail,lod=+document.getElementById('memoLOD').value){batchElements(THREE,sectionElements.filter(e=>!e.specPilot&&(lod===100||detailLevel(e)<=lod)),group,detail,meshForElement,lod,{edges:document.getElementById('showModelEdges').checked});}
 
 function portalCut(poly){return parkingDesign?parkingDesign.ramps.reduce((pieces,r)=>pieces.flatMap(q=>minusCore(q,r.polygon)),[poly]).filter(q=>q.length>=3&&polyArea2(q)>.01):[poly];}
 function updateGroundOpenings(){
@@ -1878,7 +1890,8 @@ function buildLandscape(){
  const batches=new Map();landscapeGroup.updateMatrixWorld(true);
  for(const m of [...landscapeGroup.children]){if(!m.isMesh)continue;let g=m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone();g.applyMatrix4(m.matrix);if(!batches.has(m.material))batches.set(m.material,[]);batches.get(m.material).push(g);landscapeGroup.remove(m);m.geometry.dispose();}
  for(const [material,geos] of batches){const size=geos.reduce((n,g)=>n+g.attributes.position.array.length,0),positions=new Float32Array(size),normals=new Float32Array(size);let at=0;for(const g of geos){positions.set(g.attributes.position.array,at);normals.set(g.attributes.normal.array,at);at+=g.attributes.position.array.length;g.dispose();}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(positions,3));g.setAttribute('normal',new THREE.BufferAttribute(normals,3));g.computeBoundingSphere();const m=new THREE.Mesh(g,material);m.castShadow=true;m.receiveShadow=true;landscapeGroup.add(m);}
- for(const m of [...landscapeGroup.children]){const edges=new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry,40),new THREE.LineBasicMaterial({color:0x111111,transparent:true,opacity:.13}));landscapeGroup.add(edges);}
+ // Landscape stays shaded: outlining every branch, leaf and paving joint
+ // creates subpixel line noise at the scale of the whole superblock.
  landscapeGroup.userData={trees:'Seeded varied planting',courtyards:['Grove','Water garden','Social garden','Rain garden']};
 }
 
@@ -1948,9 +1961,17 @@ for(const id of ['bimView','bimLevel','groundOutlines','sectionLayer','sectionCu
 document.getElementById('memoLOD').addEventListener('change',()=>{
  const lod=+document.getElementById('memoLOD').value;window.memoLOD=lod;
  document.getElementById('bimView').value=lod>=300?'bim':'source';
- renderer.setPixelRatio(Math.min(devicePixelRatio,lod>=300?1.25:1));
- sun.shadow.mapSize.set(lod>=300?2048:1024,lod>=300?2048:1024);sun.shadow.map?.dispose();
+ updateRenderResolution();
  updateBimView();window.dispatchEvent(new Event('memo-lod-change'));
+});
+document.getElementById('showModelEdges').addEventListener('change',()=>{renderedLOD=-1;updateBimView();});
+document.getElementById('showShadows').addEventListener('change',e=>{
+ renderer.shadowMap.enabled=e.target.checked;renderer.shadowMap.needsUpdate=true;
+ // Shadow support is compiled into Three.js materials; refresh existing ones
+ // when switching it off/on, including batched landscape and workspace meshes.
+ const materials=new Set();scene.traverse(o=>{for(const m of [].concat(o.material||[]))materials.add(m);});
+ for(const material of materials)material.needsUpdate=true;
+ window.memoInvalidate?.();
 });
 document.getElementById('lockGeometry').onchange=e=>document.getElementById('setback').disabled=e.target.checked;
 const bimRay=new THREE.Raycaster(),bimMouse=new THREE.Vector2();let downPoint;
@@ -2177,6 +2198,7 @@ addEventListener('resize',()=>{
   camera.aspect=viewSize().width/viewSize().height;
   camera.updateProjectionMatrix();
   window.memoInvalidate?.();
+  updateRenderResolution();
   renderer.setSize(viewSize().width,viewSize().height);
 });
 // Workspace panels change #scene width/height without a window resize.

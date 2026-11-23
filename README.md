@@ -42,6 +42,17 @@ American Superblock by **MEMO Studio / Alireza Memarian** explores what happens 
 5. Open **Drawing set** to see the proposal as architectural documents.
 6. Use **Focus unit**, **Unit egress**, or **Couple Living Lab** to move to the scale of daily life.
 
+The model opens with shaded surfaces and **Model edges** off. Enable it in the
+top toolbar for architectural outlines; **Shadows** can be toggled independently.
+Detailed views display physical components without overlapping room-volume
+proxies. Room data, schedules, and exports remain available.
+
+Rendering geometry checks run without a GPU:
+
+```sh
+node app/tests/render-surfaces.test.mjs
+```
+
 ## Remix it with AI
 
 **Fork the repository, connect the fork to your coding assistant, and give it one architectural problem to solve.** The editable source is here; you do not need the original hosting platform to run the browser model.
