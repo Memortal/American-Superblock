@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createHash, randomUUID } from 'node:crypto';
-import { stat, unlink } from 'node:fs/promises';
+import { unlink } from 'node:fs/promises';
+import { downloadModelExport } from './export-validation.mjs';
 import { join } from 'node:path';
 import { normalizeParameters, applyParameters } from './architecture.mjs';
 
@@ -88,13 +89,8 @@ export function registerVersionTools(server,{withBrowser,publicBase,httpMode,wor
     try{
       const bytes=await withBrowser(async page=>{
         await applyParameters(page,r.parameters);
-        await prune(1);
-        const pending=page.waitForEvent('download',{timeout:120000});
-        await page.evaluate(id=>document.getElementById(id).click(),format==='json'?'exportJson':'exportIfc');
-        const download=await pending;
-        await download.saveAs(path);
-        const size=(await stat(path)).size;
-        if(!size||size>256*1024*1024)throw Error('Unexpected export size');
+        await prune(format==='ifc'?0:1);
+        const size=await downloadModelExport(page,path,format);
         artifacts.set(key,{path,filename,format,created:Date.now()});
         return size;
       });
