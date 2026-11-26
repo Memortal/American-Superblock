@@ -4,6 +4,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { fileURLToPath } from 'node:url';
 import { normalizeParameters } from './architecture.mjs';
+import { analyzeParcel, createBrief, generateOptions, compareOptions, planSvg } from './city-maker.mjs';
 import { startStudy, advanceStudy, nextCandidate, summarize, selectStudy, createCodec } from './design-study.mjs';
 import { efficiency, daylight, clashes, egress, structure, rankCandidates } from './analysis.mjs';
 import { createDesign, editDesign, navigateDesign, validateDesign } from './design-versions.mjs';
@@ -31,7 +32,8 @@ test('MCP handshake and real model exports', {timeout:600000}, async()=>{
   try{
     await client.connect(transport);
     const {tools}=await client.listTools();
-    assert.equal(tools.length,29);
+    assert.equal(tools.length,35);
+    for(const name of ['analyze_parcel','create_city_brief','generate_city_options','compare_city_options','get_city_proposal','export_city_proposal'])assert.ok(tools.some(t=>t.name===name));
     for(const name of ['start_design_study','advance_design_study','get_design_study','propose_next_design','finish_design_study'])assert.ok(tools.some(t=>t.name===name));
     for(const name of ['analyze_daylight','check_clashes','analyze_egress','analyze_structure','analyze_efficiency','optimize_design'])assert.ok(tools.some(t=>t.name===name));
     for(const name of ['get_model_view','get_floor_plan','get_section','get_parameters','modify_parameters'])assert.ok(tools.some(t=>t.name===name));
@@ -180,5 +182,53 @@ test('V5 autonomous study against actual model',{timeout:900000,skip:process.env
     const report=await call('get_design_study',{studyToken:study.studyToken});assert.equal(report.evaluated,2);
     const selected=await call('finish_design_study',{studyToken:study.studyToken});
     assert.equal(selected.status,'selected_for_review');assert.ok(selected.designManifest);
+  }finally{await client.close();}
+});
+
+test('V6 convex parcel setback, massing geometry and program consistency',()=>{
+  const parcel={boundary:[[0,0],[660,0],[660,660],[0,660]],setbackFt:15,angleDeg:0};
+  const a=analyzeParcel(parcel);assert.equal(a.areaSf,435600);assert.equal(a.perimeterFt,2640);assert.ok(Math.abs(a.buildableAreaSf-396900)<.0001);
+  assert.equal(analyzeParcel({...parcel,boundary:[...parcel.boundary].reverse()}).areaSf,435600);
+  assert.throws(()=>analyzeParcel({boundary:[[0,0],[100,0],[30,30],[100,100],[0,100]]}));
+  assert.throws(()=>analyzeParcel({boundary:[[0,0],[100,100],[0,100],[100,0]]}));
+  assert.equal(analyzeParcel({...parcel,boundary:[[0,0],[30,0],[30,30],[0,30]],setbackFt:20}).status,'empty_setback_envelope');
+  assert.throws(()=>createBrief({unitMix:{...createBrief().unitMix,studio:{share:.9,areaSf:300,occupants:1}}}));
+  const result=generateOptions(parcel,{maxFAR:3,maxCoverage:.6,maxFloors:8,targetResidents:1000});
+  assert.equal(result.options.length,5);
+  assert.deepEqual(generateOptions(parcel,{maxFAR:3,maxCoverage:.6,maxFloors:8,targetResidents:1000}),result);
+  for(const o of result.options){
+    const m=o.metrics;assert.ok(m.coverage<=.6+1e-9);assert.ok(m.FAR<=3+1e-9);assert.ok(m.floors<=8);assert.ok(m.allocatedNetSf<=m.netResidentialAssumptionSf+.01);
+    assert.equal(m.homes,m.unitSchedule.reduce((n,u)=>n+u.count,0));
+    assert.equal(m.estimatedResidents,m.unitSchedule.reduce((n,u)=>n+u.count*u.occupants,0));
+    for(const b of o.blocks)for(const [x,y] of b.polygon)assert.ok(x>=15-1e-5&&x<=645+1e-5&&y>=15-1e-5&&y<=645+1e-5);
+  }
+  const ranked=compareOptions(result,'target');assert.equal(ranked.length,5);assert.ok(Math.abs(ranked[0].metrics.targetDifference)<=Math.abs(ranked[4].metrics.targetDifference));
+  assert.ok(planSvg(result,result.options[0]).startsWith('<svg'));
+  const rotated=generateOptions({boundary:[[0,0],[300,300],[100,500],[-200,200]],setbackFt:10});
+  assert.ok(rotated.options.length>0);
+  for(const o of rotated.options)for(const block of o.blocks)for(const v of block.polygon)for(let i=0;i<rotated.parcel.boundary.length;i++){
+    const a=rotated.parcel.boundary[i],b=rotated.parcel.boundary[(i+1)%rotated.parcel.boundary.length];
+    const d=((b[0]-a[0])*(v[1]-a[1])-(b[1]-a[1])*(v[0]-a[0]))/Math.hypot(b[0]-a[0],b[1]-a[1]);
+    assert.ok(d>=10-1e-5);
+  }
+});
+test('V6 MCP parcel workflow without Chromium',{timeout:30000},async()=>{
+  const client=new Client({name:'superblock-v6-smoke',version:'1.0.0'});
+  const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('./server.mjs',import.meta.url))],stderr:'inherit'});
+  try{
+    await client.connect(transport);
+    const call=async(name,args={})=>{const r=await client.callTool({name,arguments:args},undefined,{timeout:15000});assert.equal(r.isError??false,false,r.content[0]?.text);return JSON.parse(r.content[0].text);};
+    const parcel={boundary:[[0,0],[660,0],[660,660],[0,660]]};
+    const brief=(await call('create_city_brief')).brief;
+    const options=await call('generate_city_options',{parcel,brief});
+    assert.equal(options.options.length,5);
+    const ranking=await call('compare_city_options',{parcel,brief});
+    const optionId=ranking.ranked[0].id;
+    assert.equal((await call('get_city_proposal',{parcel,brief,optionId})).option.id,optionId);
+    const artifact=await call('export_city_proposal',{parcel,brief,optionId,format:'json'});
+    const {readFile}=await import('node:fs/promises');
+    assert.equal(JSON.parse(await readFile(artifact.localPath,'utf8')).option.id,optionId);
+    const svg=await call('export_city_proposal',{parcel,brief,optionId,format:'svg'});
+    assert.ok((await readFile(svg.localPath,'utf8')).startsWith('<svg'));
   }finally{await client.close();}
 });
