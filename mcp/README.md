@@ -101,6 +101,23 @@ The client holds a signed token for 24 hours. By default it becomes invalid afte
 
 Run TEST_V5=1 npm test to exercise the live-model study. Deterministic search, failure and token-integrity tests run by default. Actual rendering and variant generation remain subject to host memory and client timeouts.
 
+## V6: City Maker parcel-to-massing studies
+
+V6 adds a separate lightweight conceptual generator, not a port of a separate City Maker application and not a rescaling of the detailed American Superblock model. It runs without Chromium.
+
+- `analyze_parcel`: validates a strictly convex, ordered polygon in local planar feet, computes site area, perimeter and a uniform inward setback envelope.
+- `create_city_brief`: validates user-supplied FAR, coverage, floor count, floor height, residential net fraction, bar depth, gap, population target and four unit types.
+- `generate_city_options`: generates up to five typologies (linear, parallel, L, U and courtyard) inside a conservative centered inscribed rectangle. Tests four bar depths and whole-floor counts; returns one option per feasible typology and reasons for rejected typologies.
+- `compare_city_options`: ranks the generated options by population, gross massing floor area, unbuilt site area or closeness to target population.
+- `get_city_proposal`: regenerates selected deterministic option geometry and program, using unchanged parcel and brief inputs.
+- `export_city_proposal`: exports the selected local-coordinate extrusion geometry as JSON or a vector SVG site plan.
+
+Example: {"parcel":{"boundary":[[0,0],[660,0],[660,660],[0,660]],"setbackFt":15},"brief":{"maxFAR":3,"maxCoverage":0.6,"maxFloors":8,"targetResidents":1000}}. These are illustrative inputs, not actual local zoning. Defaults assume 300/500/800/1200 SF units, with occupancy and mix editable. Unit estimates use assumed net residential area and largest-remainder allocation; no actual apartments or corridors are drawn. Targeted studies select one candidate per typology based on proximity to the target; alternate rankings compare that generated set, not every possible layout.
+
+Only strictly convex polygons in local feet are accepted. Concave parcels, holes, geographic coordinates, survey/geocoding, live zoning data, terrain, streets, parking, detailed BIM, engineering and IFC export for generated parcels are not implemented. Unbuilt site area is not verified usable open space. All results are preliminary; the original Superblock IFC tools remain separate.
+
+Export links are temporary, bearer links valid for up to one hour (earlier eviction possible). Do not submit private project data to the unauthenticated public deployment. Tests include rotated parcels, setbacks, program consistency, invalid boundaries and a full MCP JSON/SVG export flow without Chromium. These tests run by default.
+
 ## Remote endpoint
 
 GitHub Pages cannot run this server. Build a Docker image from the repository root:
