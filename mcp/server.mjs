@@ -4,6 +4,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import express from 'express';
 import { chromium } from 'playwright';
 import { z } from 'zod';
+import { registerArchitectureTools, lookupDrawing } from './architecture.mjs';
 import { readFile, mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -21,7 +22,16 @@ let snapshotPromise, ifcPromise;
 const workdir = await mkdtemp(join(tmpdir(), 'superblock-mcp-'));
 process.on('exit', () => { /* OS temp directory is removed on graceful shutdown below. */ });
 
-async function capture(format) {
+let browserTail=Promise.resolve(), browserJobs=0;
+async function withBrowser(operation) {
+  if(browserJobs>=2)throw Error('Browser busy; retry after the current model operation');
+  browserJobs++;
+  const previous=browserTail;
+  let release;browserTail=new Promise(ok=>{release=ok;});
+  await previous;
+  try{return await runBrowser(operation);}finally{browserJobs--;release();}
+}
+async function runBrowser(operation) {
   const staticApp = express();
   staticApp.disable('x-powered-by');
   staticApp.use(express.static(root, { dotfiles: 'deny' }));
@@ -39,6 +49,14 @@ async function capture(format) {
     });
     await page.goto(origin + '/superblock.html', { waitUntil: 'domcontentloaded', timeout: 120000 });
     await page.waitForFunction(() => typeof document.getElementById('exportJson')?.onclick === 'function' && !!window.memoBimRegistry, { }, { timeout: 180000 });
+    await page.waitForFunction(()=>typeof window.memoInvalidate==='function',{}, {timeout:120000});
+    return await operation(page);
+  } finally {
+    try { await browser?.close(); } finally { await new Promise(ok => listener.close(ok)); }
+  }
+}
+async function capture(format) {
+  return withBrowser(async page=>{
     const cfg = formats[format];
     const downloadPromise = page.waitForEvent('download', { timeout: 120000 });
     await page.evaluate(id => document.getElementById(id).click(), cfg.button);
@@ -48,9 +66,7 @@ async function capture(format) {
     const info = await stat(file);
     if (!info.size || info.size > 256 * 1024 * 1024) throw new Error('Unexpected export size');
     return file;
-  } finally {
-    try { await browser?.close(); } finally { await new Promise(ok => listener.close(ok)); }
-  }
+  });
 }
 async function snapshot() {
   if (!snapshotPromise) snapshotPromise = (async () => {
@@ -74,9 +90,9 @@ const readOnly = { readOnlyHint:true, destructiveHint:false, idempotentHint:true
 const textFilter = z.string().max(100).optional();
 const elementSummary = e => ({ id:e.id, type:e.type, role:e.role, building:e.building, level:e.level, pieceId:e.pieceId, dwellingId:e.dwellingId, partCount:e.parts?.length ?? 0 });
 function makeServer() {
-  const server = new McpServer({name:'american-superblock',version:'0.1.0'}, {instructions:'Read-only access to the real American Superblock default browser model. Do not present schematic studies as engineering approvals.'});
+  const server = new McpServer({name:'american-superblock',version:'0.2.0'}, {instructions:'Access the real American Superblock browser model, drawings and isolated temporary variants. No shared design changes. Do not present schematic studies as engineering approvals.'});
   const add = (name, description, inputSchema, handler) => server.registerTool(name, {description,inputSchema,annotations:readOnly}, safe(handler));
-  add('get_project', 'Get project links, capabilities and limitations without launching the browser.', {}, async () => ({name:'American Superblock',studio:'MEMO Studio',viewer:view,source,siteFeet:[660,660],capabilities:['default model geometry','element queries','program metrics','geometry JSON and IFC4 export'],limitations:caveat}));
+  add('get_project', 'Get project links, capabilities and limitations without launching the browser.', {}, async () => ({name:'American Superblock',studio:'MEMO Studio',viewer:view,source,siteFeet:[660,660],capabilities:['default model geometry','element queries','program metrics','geometry JSON and IFC4 export','model PNG views','floor plans and sections with SVG','isolated design variants'],limitations:caveat}));
   add('get_superblock', 'Read the default browser-generated site, building IDs, section metadata and element totals.', {}, async () => {
     const {data, elements} = await snapshot();
     const {parking,...section} = data.section || {};
@@ -112,6 +128,7 @@ function makeServer() {
     const file=format==='json'?(await snapshot()).file:await getIfc();
     return {format,bytes:(await stat(file)).size,...(httpMode?{downloadUrl:publicBase?publicBase+'/artifacts/'+format:null,downloadPath:'/artifacts/'+format}:{localPath:file}),viewer:view,caveat};
   });
+  registerArchitectureTools(server,{withBrowser,publicBase,httpMode,workdir,caveat,viewer:view,readOnly});
   return server;
 }
 if (httpMode) {
@@ -129,6 +146,12 @@ if (httpMode) {
     if(!Object.hasOwn(formats,f))return res.sendStatus(404);
     try {const path=f==='json'?(await snapshot()).file:await getIfc();res.type(formats[f].mime).download(path,formats[f].file);}
     catch(e){console.error(e.message);res.status(503).send('Export unavailable');}
+  });
+  app.get('/drawings/:id',async(req,res)=>{
+    if(!/^[0-9a-f-]{36}$/.test(req.params.id))return res.sendStatus(404);
+    const file=await lookupDrawing(req.params.id);
+    if(!file)return res.sendStatus(404);
+    res.set('Cache-Control','no-store').type('image/svg+xml').download(file,'MEMO-Superblock.svg');
   });
   app.post('/mcp',express.json({limit:'256kb'}),async(req,res)=>{
     const server=makeServer(),transport=new StreamableHTTPServerTransport({sessionIdGenerator:undefined,enableJsonResponse:true});
