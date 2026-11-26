@@ -7,6 +7,8 @@ import { z } from 'zod';
 import { registerArchitectureTools, lookupDrawing } from './architecture.mjs';
 import { registerVersionTools, lookupDesignExport } from './design-versions.mjs';
 import { registerAnalysisTools } from './analysis.mjs';
+import { registerStudyTools } from './design-study.mjs';
+import { registerCityTools, lookupCityExport } from './city-maker.mjs';
 import { readFile, mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -92,9 +94,9 @@ const readOnly = { readOnlyHint:true, destructiveHint:false, idempotentHint:true
 const textFilter = z.string().max(100).optional();
 const elementSummary = e => ({ id:e.id, type:e.type, role:e.role, building:e.building, level:e.level, pieceId:e.pieceId, dwellingId:e.dwellingId, partCount:e.parts?.length ?? 0 });
 function makeServer() {
-  const server = new McpServer({name:'american-superblock',version:'0.4.0'}, {instructions:'Access the real American Superblock browser model, drawings and isolated temporary variants. Portable client-held design revision histories; no shared design changes. Do not present schematic studies as engineering approvals.'});
+  const server = new McpServer({name:'american-superblock',version:'0.6.0'}, {instructions:'Access the real American Superblock browser model, drawings and isolated temporary variants. Portable client-held design revision histories; no shared design changes. Do not present schematic studies as engineering approvals.'});
   const add = (name, description, inputSchema, handler) => server.registerTool(name, {description,inputSchema,annotations:readOnly}, safe(handler));
-  add('get_project', 'Get project links, capabilities and limitations without launching the browser.', {}, async () => ({name:'American Superblock',studio:'MEMO Studio',mcpVersion:'0.4.0',viewer:view,source,siteFeet:[660,660],capabilities:['default model geometry','element queries','program metrics','geometry JSON and IFC4 export','model PNG views','floor plans and sections with SVG','isolated design variants','portable design version history','undo and redo','model-based revision comparison','variant IFC4 and JSON export','facade orientation screening','bounding-box clash candidates','egress validity','structural geometry inventory','residential efficiency metrics','bounded candidate optimization'],limitations:caveat}));
+  add('get_project', 'Get project links, capabilities and limitations without launching the browser.', {}, async () => ({name:'American Superblock',studio:'MEMO Studio',mcpVersion:'0.6.0',viewer:view,source,siteFeet:[660,660],capabilities:['default model geometry','element queries','program metrics','geometry JSON and IFC4 export','model PNG views','floor plans and sections with SVG','isolated design variants','portable design version history','undo and redo','model-based revision comparison','variant IFC4 and JSON export','facade orientation screening','bounding-box clash candidates','egress validity','structural geometry inventory','residential efficiency metrics','bounded candidate optimization','goal-driven design studies','adaptive candidate generation','signed study history','constraint-based selection','convex parcel feasibility','conceptual city massing','housing capacity estimates','city JSON and SVG exports'],limitations:caveat}));
   add('get_superblock', 'Read the default browser-generated site, building IDs, section metadata and element totals.', {}, async () => {
     const {data, elements} = await snapshot();
     const {parking,...section} = data.section || {};
@@ -133,6 +135,8 @@ function makeServer() {
   registerArchitectureTools(server,{withBrowser,publicBase,httpMode,workdir,caveat,viewer:view,readOnly});
   registerVersionTools(server,{withBrowser,publicBase,httpMode,workdir,caveat});
   registerAnalysisTools(server,{snapshot,withBrowser,workdir,caveat});
+  registerStudyTools(server,{snapshot,withBrowser,workdir,caveat});
+  registerCityTools(server,{workdir,httpMode,publicBase});
   return server;
 }
 if (httpMode) {
@@ -144,7 +148,7 @@ if (httpMode) {
     if(bind==='127.0.0.1'&&!['127.0.0.1','localhost'].includes(req.hostname))return res.status(403).send('Host not allowed');
     next();
   });
-  app.get('/health',(_req,res)=>res.json({status:'ok',model:'lazy-loaded',mcpVersion:'0.4.0',toolCount:24}));
+  app.get('/health',(_req,res)=>res.json({status:'ok',model:'lazy-loaded',mcpVersion:'0.6.0',toolCount:35}));
   app.get('/artifacts/:format',async(req,res)=>{
     const f=req.params.format;
     if(!Object.hasOwn(formats,f))return res.sendStatus(404);
@@ -162,6 +166,12 @@ if (httpMode) {
     const artifact=await lookupDesignExport(req.params.id);
     if(!artifact)return res.sendStatus(404);
     res.set('Cache-Control','no-store').type(formats[artifact.format].mime).download(artifact.path,artifact.filename);
+  });
+  app.get('/city-exports/:id',async(req,res)=>{
+    if(!/^[0-9a-f-]{36}$/.test(req.params.id))return res.sendStatus(404);
+    const artifact=await lookupCityExport(req.params.id);
+    if(!artifact)return res.sendStatus(404);
+    res.set('Cache-Control','no-store').type(artifact.format==='svg'?'image/svg+xml':'application/json').download(artifact.path,artifact.filename);
   });
   app.post('/mcp',express.json({limit:'256kb'}),async(req,res)=>{
     const server=makeServer(),transport=new StreamableHTTPServerTransport({sessionIdGenerator:undefined,enableJsonResponse:true});
