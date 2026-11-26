@@ -53,6 +53,10 @@ Rendering geometry checks run without a GPU:
 node app/tests/render-surfaces.test.mjs
 ```
 
+## Model Context Protocol (MCP)
+
+A read-only MCP server for the real default architectural model is available in [mcp/](mcp/README.md). It provides element queries, density metrics, status and IFC4/JSON exports. It supports local stdio and remote Streamable HTTP. Runtime verification and hosting are separate; no live remote endpoint is advertised yet.
+
 ## Remix it with AI
 
 **Fork the repository, connect the fork to your coding assistant, and give it one architectural problem to solve.** The editable source is here; you do not need the original hosting platform to run the browser model.
