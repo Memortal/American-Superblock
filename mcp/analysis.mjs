@@ -59,7 +59,7 @@ export function clashes(data,{building='all',groupA='frame',groupB='glazing',tol
     if(y.b[0]>=x.b[3]-toleranceFt)break;
     if(y.b[3]<=x.b[0]+toleranceFt||x.id===y.id)continue;
     const overlap=[0,1,2].map(i=>Math.min(x.b[i+3],y.b[i+3])-Math.max(x.b[i],y.b[i]));
-    if(overlap.every(v=>v>toleranceFt)){count++;if(hits.length<limit)hits.push({a:x.id,aPart:x.part,b:y.id,bPart:y.part,overlapAabbFt:overlap.map(round),overlapAabbSfFt3:round(overlap.reduce((p,v)=>p*v,1))});}
+    if(overlap.every(v=>v>toleranceFt)){count++;if(hits.length<limit)hits.push({a:x.id,aPart:x.part,b:y.id,bPart:y.part,overlapAabbFt:overlap.map(round),overlapAabbFt3:round(overlap.reduce((p,v)=>p*v,1))});}
   }
   return {status:!a.length||!b.length?'insufficient_exported_geometry':truncated?'partial_screen':'screen_complete',groupA,groupB,partCounts:[a.length,b.length],skipped,checks:Math.min(checked,pairBudget),candidatePartPairs:count,returned:hits.length,truncated,candidates:hits,method:'3D axis-aligned bounding-box overlap screening only; includes loft top polygons and conservative ramp bounds. Expected joints and false positives are possible. Not solid intersections or clash-free certification. Unexported MEP is not assessed.'};
 }
