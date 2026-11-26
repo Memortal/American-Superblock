@@ -4,6 +4,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { fileURLToPath } from 'node:url';
 import { normalizeParameters } from './architecture.mjs';
+import { efficiency, daylight, clashes, egress, structure, rankCandidates } from './analysis.mjs';
 import { createDesign, editDesign, navigateDesign, validateDesign } from './design-versions.mjs';
 test('portable V3 revisions, undo, redo and input validation',()=>{
   const a=createDesign();const b=editDesign(a,{setback:20});const c=editDesign(b,{runPerStorey:3});
@@ -29,7 +30,8 @@ test('MCP handshake and real model exports', {timeout:600000}, async()=>{
   try{
     await client.connect(transport);
     const {tools}=await client.listTools();
-    assert.equal(tools.length,18);
+    assert.equal(tools.length,24);
+    for(const name of ['analyze_daylight','check_clashes','analyze_egress','analyze_structure','analyze_efficiency','optimize_design'])assert.ok(tools.some(t=>t.name===name));
     for(const name of ['get_model_view','get_floor_plan','get_section','get_parameters','modify_parameters'])assert.ok(tools.some(t=>t.name===name));
     const call=async(name,args={})=>{
       const r=await client.callTool({name,arguments:args},undefined,{timeout:300000});
@@ -95,5 +97,39 @@ test('V3 real revision comparison and variant export',{timeout:900000,skip:proce
     const data=JSON.parse(await readFile(artifact.localPath,'utf8'));
     assert.equal(data.vSection.settings.runPerStorey,3);
     assert.ok(data.elements.length>0);
+  }finally{await client.close();}
+});
+
+test('V4 geometry analysis formulas and conservative failure states',()=>{
+  const p={polygon:[[0,0],[4,0],[4,0.2],[0,0.2]],z:0,height:3};
+  const d={site:[660,660],pieces:[{lowerTotalArea:1000,apartmentCount:0,levels:3}],vSection:{enabled:true,maxShift:4},elements:[{id:'W',type:'IFCWINDOW',facade:true,building:'B1',parts:[p]},{id:'C',type:'IFCCOLUMN',building:'B1',parts:[{polygon:[[1,-1],[2,-1],[2,1],[1,1]],z:0,height:10}]}]};
+  assert.equal(efficiency(d).homes,1);assert.equal(efficiency(d).residentialBasePlanSf,1000);
+  assert.equal(daylight(d,{azimuth:0,altitude:0}).unshadedTwoSidedProjectedAreaProxySf,12);
+  assert.equal(daylight(d,{azimuth:90,altitude:0}).unshadedTwoSidedProjectedAreaProxySf,0);
+  const c=clashes(d);assert.equal(c.candidatePartPairs,1);assert.equal(c.candidates[0].a,'C');
+  assert.equal(clashes(d,{groupA:'pipe',groupB:'frame'}).status,'insufficient_exported_geometry');
+  assert.equal(clashes(d,{pairBudget:0}).status,'partial_screen');
+  assert.equal(egress(d).status,'INVALIDATED_BY_V_SECTION');assert.equal(egress(d).distancesAvailable,false);
+  assert.equal(structure(d).geometryInventory.IFCCOLUMN.elements,1);
+  const r=rankCandidates([{candidate:1,metrics:{homes:10,residentialBasePlanSf:100,maxVShiftFt:4}},{candidate:2,metrics:{homes:20,residentialBasePlanSf:200,maxVShiftFt:2}}],{homes:1,area:1,lowShift:1});
+  assert.equal(r[0].candidate,2);assert.equal(r[0].pareto,true);assert.equal(r[1].pareto,false);
+});
+test('V4 analyses on actual model export',{timeout:900000,skip:process.env.TEST_V4!=='1'},async()=>{
+  const client=new Client({name:'superblock-v4-smoke',version:'1.0.0'});
+  const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('./server.mjs',import.meta.url))],stderr:'inherit'});
+  try{
+    await client.connect(transport);
+    const call=async(name,args={})=>{
+      const r=await client.callTool({name,arguments:args},undefined,{timeout:600000});
+      assert.equal(r.isError??false,false,r.content[0]?.text);return JSON.parse(r.content[0].text);
+    };
+    const base=await call('analyze_efficiency');assert.ok(base.homes>0);assert.equal(base.netToGross,null);
+    assert.equal((await call('analyze_density')).homes,base.homes);
+    const day=await call('analyze_daylight');assert.ok(day.parts>0);assert.ok(day.glazingVerticalAreaProxySf>0);
+    const clash=await call('check_clashes');assert.ok(clash.partCounts[0]>0);assert.ok(clash.checks<=250000);
+    assert.equal((await call('analyze_egress')).status,'INVALIDATED_BY_V_SECTION');
+    const st=await call('analyze_structure');assert.ok(st.geometryInventory.IFCCOLUMN.elements>0);
+    const opt=await call('optimize_design',{candidates:[{}, {runPerStorey:3}]});
+    assert.equal(opt.status,'compared');assert.equal(opt.ranked.length,2);
   }finally{await client.close();}
 });
