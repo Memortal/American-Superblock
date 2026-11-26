@@ -84,8 +84,8 @@ export function rankCandidates(results,weights){
   const v=results.map(values),ranges=keys.map((_,i)=>[Math.min(...v.map(a=>a[i])),Math.max(...v.map(a=>a[i]))]);
   return results.map((r,i)=>({...r,score:round(v[i].reduce((s,x,j)=>s+w[j]*(ranges[j][0]===ranges[j][1]?0.5:(x-ranges[j][0])/(ranges[j][1]-ranges[j][0])),0)/sum),pareto:!v.some((a,j)=>j!==i&&a.every((x,k)=>x>=v[i][k])&&a.some((x,k)=>x>v[i][k]))})).sort((a,b)=>b.score-a.score);
 }
-export function registerAnalysisTools(server,{snapshot,withBrowser,workdir,caveat}){
-  async function load(p){
+export function createModelLoader({snapshot,withBrowser,workdir}){
+  return async function load(p){
     const normalized=normalizeParameters(p);
     if(normalized.setback===18&&normalized.runPerStorey===2&&normalized.stepFloors===2)return (await snapshot()).data;
     return withBrowser(async page=>{
@@ -102,6 +102,9 @@ export function registerAnalysisTools(server,{snapshot,withBrowser,workdir,cavea
       }finally{await unlink(path).catch(()=>{});}
     });
   }
+}
+export function registerAnalysisTools(server,{snapshot,withBrowser,workdir,caveat}){
+  const load=createModelLoader({snapshot,withBrowser,workdir});
   const add=(name,description,inputSchema,fn)=>server.registerTool(name,{description,inputSchema,annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}},async args=>{
     try{return {content:[{type:'text',text:JSON.stringify({...await fn(args),caveat})}]};}
     catch(e){console.error(name,e.message);return {isError:true,content:[{type:'text',text:'Analysis unavailable: invalid parameters, model export or browser resource limit.'}]};}
