@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: american-superblock-mcp
+    runtime: docker
+    plan: standard
+    dockerfilePath: ./mcp/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
