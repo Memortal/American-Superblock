@@ -2,7 +2,7 @@ services:
   - type: web
     name: american-superblock-mcp
     runtime: docker
-    plan: standard
+    plan: free
     dockerfilePath: ./mcp/Dockerfile
     dockerContext: .
     healthCheckPath: /health
