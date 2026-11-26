@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
+import { createServer } from 'node:net';
+import { once } from 'node:events';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { normalizeParameters } from './architecture.mjs';
 import { analyzeParcel, createBrief, generateOptions, compareOptions, planSvg } from './city-maker.mjs';
 import { startStudy, advanceStudy, nextCandidate, summarize, selectStudy, createCodec } from './design-study.mjs';
@@ -202,6 +206,10 @@ test('V6 convex parcel setback, massing geometry and program consistency',()=>{
     assert.equal(m.estimatedResidents,m.unitSchedule.reduce((n,u)=>n+u.count*u.occupants,0));
     for(const b of o.blocks)for(const [x,y] of b.polygon)assert.ok(x>=15-1e-5&&x<=645+1e-5&&y>=15-1e-5&&y<=645+1e-5);
   }
+  const targetSmall=generateOptions(parcel,{targetResidents:100});
+  const maxPopulation=generateOptions(parcel);
+  for(const o of targetSmall.options){const other=maxPopulation.options.find(x=>x.typology===o.typology);assert.ok(Math.abs(o.metrics.targetDifference)<=Math.abs(other.metrics.estimatedResidents-100));}
+  assert.ok(targetSmall.options.some(o=>o.metrics.floors<8));
   const ranked=compareOptions(result,'target');assert.equal(ranked.length,5);assert.ok(Math.abs(ranked[0].metrics.targetDifference)<=Math.abs(ranked[4].metrics.targetDifference));
   assert.ok(planSvg(result,result.options[0]).startsWith('<svg'));
   const rotated=generateOptions({boundary:[[0,0],[300,300],[100,500],[-200,200]],setbackFt:10});
@@ -231,4 +239,32 @@ test('V6 MCP parcel workflow without Chromium',{timeout:30000},async()=>{
     const svg=await call('export_city_proposal',{parcel,brief,optionId,format:'svg'});
     assert.ok((await readFile(svg.localPath,'utf8')).startsWith('<svg'));
   }finally{await client.close();}
+});
+
+test('HTTP release handshake, 35 tools, and downloadable City Maker artifact',{timeout:30000},async()=>{
+  const socket=createServer();socket.listen(0,'127.0.0.1');await once(socket,'listening');const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
+  const base='http://127.0.0.1:'+port;
+  const child=spawn(process.execPath,[fileURLToPath(new URL('./server.mjs',import.meta.url)),'--http'],{env:{...process.env,HOST:'127.0.0.1',PORT:String(port),PUBLIC_BASE_URL:'https://example.invalid'},stdio:['ignore','ignore','inherit']});
+  try{
+    let health;
+    for(let i=0;i<100;i++){try{const r=await fetch(base+'/health',{signal:AbortSignal.timeout(500)});if(r.ok){health=await r.json();break;}}catch{}await sleep(100);}
+    assert.equal(health?.mcpVersion,'0.6.1');assert.equal(health.toolCount,35);assert.equal(health.browserJobs,0);
+    const rpc=async(method,params={})=>{
+      const res=await fetch(base+'/mcp',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json, text/event-stream'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params}),signal:AbortSignal.timeout(5000)});
+      assert.equal(res.status,200);const json=await res.json();assert.ok(!json.error,JSON.stringify(json.error));return json.result;
+    };
+    const init=await rpc('initialize',{protocolVersion:'2025-03-26',capabilities:{},clientInfo:{name:'release-test',version:'1'}});
+    assert.equal(init.serverInfo.version,health.mcpVersion);
+    const tools=await rpc('tools/list');assert.equal(tools.tools.length,35);
+    const call=async(name,args)=>{const r=await rpc('tools/call',{name,arguments:args});assert.equal(r.isError??false,false,r.content[0]?.text);return JSON.parse(r.content[0].text);};
+    const parcel={boundary:[[0,0],[300,0],[300,300],[0,300]]};
+    const options=await call('generate_city_options',{parcel});assert.ok(options.options.length>0);
+    const optionId=options.options[0].id;
+    const exportResult=await call('export_city_proposal',{parcel,optionId,format:'json'});
+    const path=new URL(exportResult.downloadUrl).pathname;
+    const file=await fetch(base+path);assert.equal(file.status,200);assert.equal((await file.json()).option.id,optionId);
+    assert.equal((await fetch(base+'/health')).status,200);
+  }finally{
+    if(child.exitCode===null){child.kill('SIGTERM');await Promise.race([once(child,'exit'),sleep(2000)]);if(child.exitCode===null)child.kill('SIGKILL');}
+  }
 });
