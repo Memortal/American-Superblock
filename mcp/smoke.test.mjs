@@ -4,6 +4,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { fileURLToPath } from 'node:url';
 import { normalizeParameters } from './architecture.mjs';
+import { startStudy, advanceStudy, nextCandidate, summarize, selectStudy, createCodec } from './design-study.mjs';
 import { efficiency, daylight, clashes, egress, structure, rankCandidates } from './analysis.mjs';
 import { createDesign, editDesign, navigateDesign, validateDesign } from './design-versions.mjs';
 test('portable V3 revisions, undo, redo and input validation',()=>{
@@ -30,7 +31,8 @@ test('MCP handshake and real model exports', {timeout:600000}, async()=>{
   try{
     await client.connect(transport);
     const {tools}=await client.listTools();
-    assert.equal(tools.length,24);
+    assert.equal(tools.length,29);
+    for(const name of ['start_design_study','advance_design_study','get_design_study','propose_next_design','finish_design_study'])assert.ok(tools.some(t=>t.name===name));
     for(const name of ['analyze_daylight','check_clashes','analyze_egress','analyze_structure','analyze_efficiency','optimize_design'])assert.ok(tools.some(t=>t.name===name));
     for(const name of ['get_model_view','get_floor_plan','get_section','get_parameters','modify_parameters'])assert.ok(tools.some(t=>t.name===name));
     const call=async(name,args={})=>{
@@ -131,5 +133,52 @@ test('V4 analyses on actual model export',{timeout:900000,skip:process.env.TEST_
     const st=await call('analyze_structure');assert.ok(st.geometryInventory.IFCCOLUMN.elements>0);
     const opt=await call('optimize_design',{candidates:[{}, {runPerStorey:3}]});
     assert.equal(opt.status,'compared');assert.equal(opt.ranked.length,2);
+  }finally{await client.close();}
+});
+
+test('V5 deterministic bounded study, feasibility, failures and signed history',async()=>{
+  const now=Date.now(),codec=createCodec(Buffer.alloc(32,9));
+  let s=startStudy({budget:4,vary:['setback'],constraints:{minHomes:100},weights:{homes:1,area:0,lowShift:0}},now);
+  const baseline=nextCandidate(s);assert.equal(baseline.setback,18);
+  const evaluate=async p=>({homes:p.setback*5,residentialBasePlanSf:p.setback*100,maxVShiftFt:5,egressStatus:'INVALIDATED_BY_V_SECTION'});
+  s=await advanceStudy(s,evaluate);
+  assert.equal(summarize(s).bestFeasible,null);
+  assert.equal(nextCandidate(s).setback,20);
+  s=await advanceStudy(s,evaluate);
+  assert.equal(summarize(s).bestFeasible.parameters.setback,20);
+  s=await advanceStudy(s,evaluate);
+  assert.equal(summarize(s).bestFeasible.parameters.setback,22);
+  s=await advanceStudy(s,async()=>{throw Error('fixture failure');});
+  assert.equal(summarize(s).failed.length,1);assert.equal(nextCandidate(s),null);
+  assert.equal(selectStudy(s).designManifest.revisions[0].parameters.setback,22);
+  const signed=codec.encode(s);assert.deepEqual(codec.decode(signed,now),s);
+  const [body,sig]=signed.split('.');
+  assert.throws(()=>codec.decode((body[0]==='A'?'B':'A')+body.slice(1)+'.'+sig,now));
+  assert.throws(()=>codec.decode(signed,now+86400001));
+  assert.throws(()=>createCodec(Buffer.alloc(32,8)).decode(signed,now));
+  let failed=startStudy({},now);failed=await advanceStudy(failed,async()=>{throw Error('baseline failed');});
+  assert.equal(summarize(failed).status,'baseline_failed');assert.equal(selectStudy(failed).designManifest,null);
+  assert.throws(()=>startStudy({weights:{homes:0,area:0,lowShift:0}},now));
+});
+test('V5 autonomous study against actual model',{timeout:900000,skip:process.env.TEST_V5!=='1'},async()=>{
+  const client=new Client({name:'superblock-v5-smoke',version:'1.0.0'});
+  const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('./server.mjs',import.meta.url))],stderr:'inherit'});
+  try{
+    await client.connect(transport);
+    const call=async(name,args={})=>{
+      const r=await client.callTool({name,arguments:args},undefined,{timeout:600000});
+      assert.equal(r.isError??false,false,r.content[0]?.text);return JSON.parse(r.content[0].text);
+    };
+    let study=await call('start_design_study',{budget:2,vary:['runPerStorey']});
+    assert.equal(study.evaluated,0);
+    study=await call('advance_design_study',{studyToken:study.studyToken});
+    assert.ok(study.ranked[0].metrics.homes>0);assert.equal(study.evaluated,1);
+    const proposed=await call('propose_next_design',{studyToken:study.studyToken});
+    assert.equal(proposed.parameters.runPerStorey,1.5);
+    study=await call('advance_design_study',{studyToken:study.studyToken});
+    assert.equal(study.status,'search_complete');assert.equal(study.ranked.length,2);
+    const report=await call('get_design_study',{studyToken:study.studyToken});assert.equal(report.evaluated,2);
+    const selected=await call('finish_design_study',{studyToken:study.studyToken});
+    assert.equal(selected.status,'selected_for_review');assert.ok(selected.designManifest);
   }finally{await client.close();}
 });
