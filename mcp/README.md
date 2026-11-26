@@ -107,7 +107,7 @@ V6 adds a separate lightweight conceptual generator, not a port of a separate Ci
 
 - `analyze_parcel`: validates a strictly convex, ordered polygon in local planar feet, computes site area, perimeter and a uniform inward setback envelope.
 - `create_city_brief`: validates user-supplied FAR, coverage, floor count, floor height, residential net fraction, bar depth, gap, population target and four unit types.
-- `generate_city_options`: generates up to five typologies (linear, parallel, L, U and courtyard) inside a conservative centered inscribed rectangle. Tests four bar depths and whole-floor counts; returns one option per feasible typology and reasons for rejected typologies.
+- `generate_city_options`: generates up to five typologies (linear, parallel, L, U and courtyard) inside a conservative centered inscribed rectangle. Tests four bar depths and all allowed whole-floor counts in population-target mode; returns one option per feasible typology and reasons for rejected typologies.
 - `compare_city_options`: ranks the generated options by population, gross massing floor area, unbuilt site area or closeness to target population.
 - `get_city_proposal`: regenerates selected deterministic option geometry and program, using unchanged parcel and brief inputs.
 - `export_city_proposal`: exports the selected local-coordinate extrusion geometry as JSON or a vector SVG site plan.
@@ -117,6 +117,14 @@ Example: {"parcel":{"boundary":[[0,0],[660,0],[660,660],[0,660]],"setbackFt":15}
 Only strictly convex polygons in local feet are accepted. Concave parcels, holes, geographic coordinates, survey/geocoding, live zoning data, terrain, streets, parking, detailed BIM, engineering and IFC export for generated parcels are not implemented. Unbuilt site area is not verified usable open space. All results are preliminary; the original Superblock IFC tools remain separate.
 
 Export links are temporary, bearer links valid for up to one hour (earlier eviction possible). Do not submit private project data to the unauthenticated public deployment. Tests include rotated parcels, setbacks, program consistency, invalid boundaries and a full MCP JSON/SVG export flow without Chromium. These tests run by default.
+
+## Consolidated release 0.6.1
+
+All 35 tools are included in this release. City Maker searches permitted whole-floor counts when a population target is set, rather than evaluating only maximum height. This is still a bounded search over predefined bar layouts.
+
+Run `npm run test:fast` for the geometry, study-token, City Maker and actual local HTTP transport checks without installing Chromium. CI gates the full browser integration suite on these fast checks. The HTTP smoke test verifies initialization, 35-tool discovery and a real downloadable City Maker JSON artifact. Full browser checks still require Chromium.
+
+The live `/health` response and `get_project` report the release from package.json; health also reports tool count, browser queue occupancy, whether the baseline export has been requested, and the Render deployment commit if available. Health is process liveness, not proof of model readiness. After merging to main, verify the Render service uses that commit, has completed deployment, and returns version 0.6.1 with 35 tools. Then verify the MCP tools/list result and a real model operation. A stale connector tool catalog may need refreshing.
 
 ## Remote endpoint
 
