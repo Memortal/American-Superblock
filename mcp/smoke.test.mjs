@@ -8,6 +8,10 @@ import { createServer } from 'node:net';
 import { once } from 'node:events';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { normalizeParameters } from './architecture.mjs';
+import { exportLimit, validateExport } from './export-validation.mjs';
+import { mkdtemp, writeFile, truncate, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { analyzeParcel, createBrief, generateOptions, compareOptions, planSvg } from './city-maker.mjs';
 import { startStudy, advanceStudy, nextCandidate, summarize, selectStudy, createCodec } from './design-study.mjs';
 import { efficiency, daylight, clashes, egress, structure, rankCandidates } from './analysis.mjs';
@@ -60,7 +64,7 @@ test('MCP handshake and real model exports', {timeout:600000}, async()=>{
     assert.equal((await call('inspect_element',{id:list.elements[0].id})).found,true);
     assert.ok((await call('analyze_density')).homes>0);
     assert.ok((await call('export_model',{format:'json'})).bytes>0);
-    if(process.env.TEST_IFC==='1')assert.ok((await call('export_model',{format:'ifc'})).bytes>0);
+    if(process.env.TEST_IFC==='1'){const artifact=await call('export_model',{format:'ifc'});assert.equal(artifact.bytes,await validateExport(artifact.localPath,'ifc'));}
   }finally{await client.close();}
 });
 
@@ -248,7 +252,7 @@ test('HTTP release handshake, 35 tools, and downloadable City Maker artifact',{t
   try{
     let health;
     for(let i=0;i<100;i++){try{const r=await fetch(base+'/health',{signal:AbortSignal.timeout(500)});if(r.ok){health=await r.json();break;}}catch{}await sleep(100);}
-    assert.equal(health?.mcpVersion,'0.6.1');assert.equal(health.toolCount,35);assert.equal(health.browserJobs,0);
+    assert.equal(health?.mcpVersion,'0.6.2');assert.equal(health.toolCount,35);assert.equal(health.browserJobs,0);
     const rpc=async(method,params={})=>{
       const res=await fetch(base+'/mcp',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json, text/event-stream'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params}),signal:AbortSignal.timeout(5000)});
       assert.equal(res.status,200);const json=await res.json();assert.ok(!json.error,JSON.stringify(json.error));return json.result;
@@ -267,4 +271,20 @@ test('HTTP release handshake, 35 tools, and downloadable City Maker artifact',{t
   }finally{
     if(child.exitCode===null){child.kill('SIGTERM');await Promise.race([once(child,'exit'),sleep(2000)]);if(child.exitCode===null)child.kill('SIGKILL');}
   }
+});
+
+test('IFC export validation rejects empty, incomplete and oversized files without loading them',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'memo-ifc-test-'));
+  try{
+    const file=join(dir,'test.ifc'),header="ISO-10303-21;\nHEADER;\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n";
+    await writeFile(file,header+"ENDSEC;\nEND-ISO-10303-21;");
+    assert.ok(await validateExport(file,'ifc')>0);
+    await writeFile(file,header);await assert.rejects(validateExport(file,'ifc'),/Incomplete/);
+    await writeFile(file,'');await assert.rejects(validateExport(file,'ifc'),/size 0 bytes/);
+    await truncate(file,256*1024*1024+1);
+    await assert.rejects(validateExport(file,'ifc',{IFC_MAX_MIB:'256'}),/size 268435457 bytes/);
+    assert.equal(exportLimit('ifc',{}),768*1024*1024);
+    assert.equal(exportLimit('json',{}),256*1024*1024);
+    assert.throws(()=>exportLimit('ifc',{IFC_MAX_MIB:'2048'}));
+  }finally{await rm(dir,{recursive:true,force:true});}
 });
