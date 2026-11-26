@@ -45,18 +45,18 @@ async function apply(page,p) {
   return actual;
 }
 
+const artifacts=new Map();
+async function prune(max=12){
+  for(const [id,a] of artifacts)if(Date.now()-a.created>3600000||artifacts.size>max){artifacts.delete(id);await unlink(a.path).catch(()=>{});}
+}
+export async function lookupDrawing(id){await prune();return artifacts.get(id)?.path;}
 export function registerArchitectureTools(server,{withBrowser,publicBase,httpMode,workdir,caveat,viewer,readOnly}){
-  const artifacts=new Map();
-  const prune=async()=>{
-    for(const [id,a] of artifacts)if(Date.now()-a.created>3600000||artifacts.size>=12){artifacts.delete(id);await unlink(a.path).catch(()=>{});}
-  };
   async function saveSvg(svg){
     if(typeof svg!=='string'||!svg.startsWith('<svg')||Buffer.byteLength(svg)>24*1024*1024)throw Error('Invalid or oversized SVG');
-    await prune();const id=randomUUID(),path=join(workdir,id+'.svg');
+    await prune(11);const id=randomUUID(),path=join(workdir,id+'.svg');
     await writeFile(path,svg,{flag:'wx'});artifacts.set(id,{path,created:Date.now()});
     return httpMode?{svgUrl:publicBase?publicBase+'/drawings/'+id:null,expiresInSeconds:3600,mayEvictEarlier:true}:{svgPath:path,expiresInSeconds:3600,mayEvictEarlier:true};
   }
-  const lookupDrawing=async id=>{await prune();return artifacts.get(id)?.path;};
   const text=value=>({type:'text',text:JSON.stringify(value)});
   const image=png=>({type:'image',mimeType:'image/png',data:png.toString('base64')});
   const add=(name,description,inputSchema,handler,annotations=readOnly)=>server.registerTool(name,{description,inputSchema,annotations},async args=>{
@@ -112,5 +112,4 @@ export function registerArchitectureTools(server,{withBrowser,publicBase,httpMod
     });
     return [text({parameters:p,summary,persistence:'none; default unchanged',next:'Pass parameters into get_model_view, get_floor_plan or get_section',caveat})];
   }),{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false});
-  return lookupDrawing;
 }
