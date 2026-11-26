@@ -1,6 +1,6 @@
 # MEMO Studio | American Superblock MCP
 
-A read-only Model Context Protocol server that runs the original American Superblock browser model with Playwright, rather than recreating the architecture. It uses the existing geometry JSON and IFC4 export buttons. The default model is cached per process. No edits to the browser application are required.
+A Model Context Protocol server with read-only baseline access and isolated temporary design variations that runs the original American Superblock browser model with Playwright, rather than recreating the architecture. It uses the existing geometry JSON and IFC4 export buttons. The default model is cached per process. No edits to the browser application are required.
 
 ## Install locally
 
@@ -38,7 +38,21 @@ For Claude Desktop or other stdio clients, configure the absolute path:
 - get_system_status: egress validity and engineering limitations
 - export_model: geometry JSON or browser IFC4 export
 
-First model access starts a headless browser and can take several minutes. Local export files live in the process temp directory. Custom generation, edits, IFC4x3, certified analyses and drawing exports are not implemented. Raw level indices are zero-based; -1 is basement. Area metrics are not GFA or FAR.
+First model access starts a headless browser and can take several minutes. Local export files live in the process temp directory. Persistent model edits, arbitrary geometry generation, IFC4x3 and certified analyses are not implemented. Drawing and image tools are available in V2. Raw level indices are zero-based; -1 is basement. Area metrics are not GFA or FAR.
+
+## V2: views, drawings and temporary design variations
+
+- `get_parameters`: actual supported design controls, defaults and ranges.
+- `get_model_view`: PNG of the actual WebGL model; axonometric building focus, whole-site plan or low camera; LOD, shadows and cut.
+- `get_floor_plan`: real drawing engine plan; PNG plus temporary vector SVG. Level 0 means Level 01, -1 means basement. Use site=true for the site sheet.
+- `get_section`: real drawing engine A301–A304 or V301–V304 sections, with scope and offset; PNG plus temporary vector SVG.
+- `modify_parameters`: rebuild an isolated browser model and report actual applied settings and program summary. Pass returned parameters into the view or drawing tools explicitly.
+
+Example: modify_parameters with { "setback": 19, "runPerStorey": 2.25, "stepFloors": 3 }, then get_model_view with { "parameters": { "setback": 19, "runPerStorey": 2.25, "stepFloors": 3 } }. The default model, GitHub source, IFC exports and other users' requests are unchanged. Variants are stateless and are not saved. Default export_model continues to export only the baseline.
+
+SVG files are temporary (up to one hour, at most 12 drawings per process, earlier eviction possible). Remote links use /drawings/:id; local stdio returns a temporary file path. PNG images are returned directly as MCP image content; display depends on the client. Browser work is serialized with at most two admitted jobs; excess work returns an error. Render Free cold starts, memory and client timeouts can limit these operations.
+
+Run TEST_V2=1 npm test for full browser view, plan, section and variation checks. The standard smoke test checks discovery, bounds and baseline exports.
 
 ## Remote endpoint
 
