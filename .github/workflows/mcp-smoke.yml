@@ -16,7 +16,7 @@ permissions:
   contents: read
 jobs:
   smoke:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
       run:
@@ -27,8 +27,10 @@ jobs:
         with:
           node-version: '22'
       - run: npm install
-      - run: npx playwright install --with-deps chromium
       - run: node --check server.mjs
+      - run: npm audit --audit-level=high
+        continue-on-error: true
+      - run: npx playwright install --with-deps chromium
       - run: npm test
         env:
           TEST_IFC: '1'
