@@ -5,6 +5,7 @@ import express from 'express';
 import { chromium } from 'playwright';
 import { z } from 'zod';
 import { registerArchitectureTools, lookupDrawing } from './architecture.mjs';
+import { registerVersionTools, lookupDesignExport } from './design-versions.mjs';
 import { readFile, mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -90,9 +91,9 @@ const readOnly = { readOnlyHint:true, destructiveHint:false, idempotentHint:true
 const textFilter = z.string().max(100).optional();
 const elementSummary = e => ({ id:e.id, type:e.type, role:e.role, building:e.building, level:e.level, pieceId:e.pieceId, dwellingId:e.dwellingId, partCount:e.parts?.length ?? 0 });
 function makeServer() {
-  const server = new McpServer({name:'american-superblock',version:'0.2.0'}, {instructions:'Access the real American Superblock browser model, drawings and isolated temporary variants. No shared design changes. Do not present schematic studies as engineering approvals.'});
+  const server = new McpServer({name:'american-superblock',version:'0.3.0'}, {instructions:'Access the real American Superblock browser model, drawings and isolated temporary variants. Portable client-held design revision histories; no shared design changes. Do not present schematic studies as engineering approvals.'});
   const add = (name, description, inputSchema, handler) => server.registerTool(name, {description,inputSchema,annotations:readOnly}, safe(handler));
-  add('get_project', 'Get project links, capabilities and limitations without launching the browser.', {}, async () => ({name:'American Superblock',studio:'MEMO Studio',viewer:view,source,siteFeet:[660,660],capabilities:['default model geometry','element queries','program metrics','geometry JSON and IFC4 export','model PNG views','floor plans and sections with SVG','isolated design variants'],limitations:caveat}));
+  add('get_project', 'Get project links, capabilities and limitations without launching the browser.', {}, async () => ({name:'American Superblock',studio:'MEMO Studio',mcpVersion:'0.3.0',viewer:view,source,siteFeet:[660,660],capabilities:['default model geometry','element queries','program metrics','geometry JSON and IFC4 export','model PNG views','floor plans and sections with SVG','isolated design variants','portable design version history','undo and redo','model-based revision comparison','variant IFC4 and JSON export'],limitations:caveat}));
   add('get_superblock', 'Read the default browser-generated site, building IDs, section metadata and element totals.', {}, async () => {
     const {data, elements} = await snapshot();
     const {parking,...section} = data.section || {};
@@ -129,6 +130,7 @@ function makeServer() {
     return {format,bytes:(await stat(file)).size,...(httpMode?{downloadUrl:publicBase?publicBase+'/artifacts/'+format:null,downloadPath:'/artifacts/'+format}:{localPath:file}),viewer:view,caveat};
   });
   registerArchitectureTools(server,{withBrowser,publicBase,httpMode,workdir,caveat,viewer:view,readOnly});
+  registerVersionTools(server,{withBrowser,publicBase,httpMode,workdir,caveat});
   return server;
 }
 if (httpMode) {
@@ -140,7 +142,7 @@ if (httpMode) {
     if(bind==='127.0.0.1'&&!['127.0.0.1','localhost'].includes(req.hostname))return res.status(403).send('Host not allowed');
     next();
   });
-  app.get('/health',(_req,res)=>res.json({status:'ok',model:'lazy-loaded'}));
+  app.get('/health',(_req,res)=>res.json({status:'ok',model:'lazy-loaded',mcpVersion:'0.3.0',toolCount:18}));
   app.get('/artifacts/:format',async(req,res)=>{
     const f=req.params.format;
     if(!Object.hasOwn(formats,f))return res.sendStatus(404);
@@ -152,6 +154,12 @@ if (httpMode) {
     const file=await lookupDrawing(req.params.id);
     if(!file)return res.sendStatus(404);
     res.set('Cache-Control','no-store').type('image/svg+xml').download(file,'MEMO-Superblock.svg');
+  });
+  app.get('/design-exports/:id',async(req,res)=>{
+    if(!/^[0-9a-f-]{36}$/.test(req.params.id))return res.sendStatus(404);
+    const artifact=await lookupDesignExport(req.params.id);
+    if(!artifact)return res.sendStatus(404);
+    res.set('Cache-Control','no-store').type(formats[artifact.format].mime).download(artifact.path,artifact.filename);
   });
   app.post('/mcp',express.json({limit:'256kb'}),async(req,res)=>{
     const server=makeServer(),transport=new StreamableHTTPServerTransport({sessionIdGenerator:undefined,enableJsonResponse:true});
