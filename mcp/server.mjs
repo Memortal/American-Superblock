@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../app/public/', import.meta.url));
 const httpMode = process.argv.includes('--http');
-const publicBase = process.env.PUBLIC_BASE_URL?.replace(/\/$/, '');
+const publicBase = (process.env.PUBLIC_BASE_URL || process.env.RENDER_EXTERNAL_URL)?.replace(/\/$/, '');
 if (publicBase && !/^https:\/\/[^/]+$/.test(publicBase)) throw new Error('PUBLIC_BASE_URL must be an HTTPS origin');
 const view = 'https://memortal.github.io/American-Superblock/';
 const source = 'https://github.com/Memortal/American-Superblock';
