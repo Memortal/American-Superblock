@@ -54,6 +54,20 @@ SVG files are temporary (up to one hour, at most 12 drawings per process, earlie
 
 Run TEST_V2=1 npm test for full browser view, plan, section and variation checks. The standard smoke test checks discovery, bounds and baseline exports.
 
+## V3: portable design version history
+
+- `create_design`: creates a version manifest from validated browser parameters.
+- `edit_design`: appends a revision. The original manifest is unchanged.
+- `undo_design` and `redo_design`: move the current revision cursor.
+- `compare_designs`: actually rebuilds two selected revisions and compares model schedule counts, base-plan program area and V geometry maximum shift.
+- `export_design`: generates real browser IFC4 or geometry JSON for the selected revision.
+
+Every history operation returns a complete portable JSON manifest and current revision. Save that manifest on the client (or as a JSON file) to resume later; there is no shared project database. A manifest supports up to 20 revisions. Editing after undo replaces the redo branch in the returned manifest, so retain the previous manifest to preserve the abandoned branch. IDs are deterministic integrity identifiers, not authorization or digital signatures. The current revision parameters can be supplied to the V2 view and drawing tools. Manifests describe inputs, not frozen geometry snapshots: later architectural engine changes may produce different geometry.
+
+Version export files are temporary (one hour maximum, two retained files per process, earlier eviction possible); remote links are bearer links, so do not share private designs on the unauthenticated public instance. The baseline export_model remains unchanged. Compare area is the undeformed base-plan program schedule including offices, not FAR, GFA, or the deformed V geometry floor area. No arbitrary topology editing, engineering certification, server database or persistent multi-user collaboration is implemented.
+
+Run TEST_V3=1 npm test for actual browser revision comparison and JSON export checks; TEST_V2=1 enables the V2 image checks. GET /health and get_project report the MCP release version (health also reports tool count); health does not establish browser readiness.
+
 ## Remote endpoint
 
 GitHub Pages cannot run this server. Build a Docker image from the repository root:
