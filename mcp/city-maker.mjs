@@ -84,12 +84,15 @@ function bars(type,x,y,d,g){
   const rect=(a,b,c,e)=>[a,b,c,e],w=2*x,h=2*y;
   if(w<d||h<d)return null;
   if(type==='linear')return [rect(-x,-d/2,x,d/2)];
+  if(type==='L'){
+    if(w<d+g||h<d+g)return null;
+    return [rect(-x,-y,x,-y+d),rect(-x,-y+d,-x+d,y)];
+  }
   if(h<2*d+g)return null;
   if(type==='parallel')return [rect(-x,-y,x,-y+d),rect(-x,y-d,x,y)];
   if(w<2*d+g)return null;
   // L/U/courtyard segments meet at edges, never overlap in area.
-  const lower=rect(-x,-y,x,-y+d),left=rect(-x,-y+d,-x+d,type==='L'?y:y-d);
-  if(type==='L')return [lower,left];
+  const lower=rect(-x,-y,x,-y+d),left=rect(-x,-y+d,-x+d,y-d);
   const right=rect(x-d,-y+d,x,y-d);
   if(type==='U')return [lower,rect(-x,-y+d,-x+d,y),rect(x-d,-y+d,x,y)];
   return [lower,rect(-x,y-d,x,y),left,right];
@@ -115,18 +118,22 @@ export function generateOptions(parcelInput,briefInput={}){
       const r=bars(type,f.x,f.y,depth,b.minGapFt);if(!r)continue;
       const footprint=r.reduce((s,[x,y,X,Y])=>s+(X-x)*(Y-y),0);
       if(footprint>p.areaSf*b.maxCoverage+EPS||footprint<EPS)continue;
-      const floors=Math.min(b.maxFloors,Math.floor((p.areaSf*b.maxFAR+EPS)/footprint));if(floors<1)continue;
-      const gfa=footprint*floors,net=gfa*b.netResidentialFraction,units=allocateUnits(net,b);
-      const blocks=r.map(([x,y,X,Y],i)=>({id:type+'-'+(i+1),polygon:[[x,y],[X,y],[X,Y],[x,Y]].map(f.world),baseZFt:0,heightFt:floors*b.floorHeightFt,floors}));
-      const metrics={footprintSf:round(footprint),grossMassingFloorAreaSf:round(gfa),netResidentialAssumptionSf:round(net),coverage:footprint/p.areaSf,FAR:gfa/p.areaSf,unbuiltSiteSf:round(p.areaSf-footprint),floors,heightFt:floors*b.floorHeightFt,barDepthFt:round(depth),...units,targetDifference:b.targetResidents===undefined?null:round(units.estimatedResidents-b.targetResidents)};
-      const candidate={typology:type,blocks,metrics};
-      const score=m=>b.targetResidents===undefined?m.estimatedResidents:-Math.abs(m.targetDifference);
-      if(!best||score(metrics)>score(best.metrics)||(score(metrics)===score(best.metrics)&&metrics.grossMassingFloorAreaSf>best.metrics.grossMassingFloorAreaSf))best=candidate;
+      const maxFloors=Math.min(b.maxFloors,Math.floor((p.areaSf*b.maxFAR+EPS)/footprint));if(maxFloors<1)continue;
+      // For a population target, test each permissible whole-floor count, not only maximum height.
+      const counts=b.targetResidents===undefined?[maxFloors]:Array.from({length:maxFloors},(_,i)=>i+1);
+      for(const floors of counts){
+        const gfa=footprint*floors,net=gfa*b.netResidentialFraction,units=allocateUnits(net,b);
+        const blocks=r.map(([x,y,X,Y],i)=>({id:type+'-'+(i+1),polygon:[[x,y],[X,y],[X,Y],[x,Y]].map(f.world),baseZFt:0,heightFt:floors*b.floorHeightFt,floors}));
+        const metrics={footprintSf:round(footprint),grossMassingFloorAreaSf:round(gfa),netResidentialAssumptionSf:round(net),coverage:footprint/p.areaSf,FAR:gfa/p.areaSf,unbuiltSiteSf:round(p.areaSf-footprint),floors,heightFt:floors*b.floorHeightFt,barDepthFt:round(depth),...units,targetDifference:b.targetResidents===undefined?null:round(units.estimatedResidents-b.targetResidents)};
+        const candidate={typology:type,blocks,metrics};
+        const score=m=>b.targetResidents===undefined?m.estimatedResidents:-Math.abs(m.targetDifference);
+        if(!best||score(metrics)>score(best.metrics)||(score(metrics)===score(best.metrics)&&metrics.grossMassingFloorAreaSf>best.metrics.grossMassingFloorAreaSf))best=candidate;
+      }
     }
     if(best){best.id=createHash('sha256').update(JSON.stringify([p.boundary,b,p.setbackFt,p.angleDeg,best.typology])).digest('hex').slice(0,16);options.push(best);}
     else rejected.push({typology:type,reason:'No tested bar depth fits the conservative envelope, gap, coverage and FAR assumptions'});
   }
-  return {schema:'memo-city-massing-1',parcel:p,brief:b,options,rejected,caveat,method:'Centered inscribed rectangle; five fixed bar typologies, tested depths and uniform whole floors. Gross massing area = footprint × floors; unit counts are estimated from net fraction and mix, not drawn apartments.'};
+  return {schema:'memo-city-massing-1',parcel:p,brief:b,options,rejected,caveat,method:'Centered inscribed rectangle; five fixed bar typologies, tested depths and uniform whole floors; target mode evaluates all allowed floor counts. Gross massing area = footprint × floors; unit counts are estimated from net fraction and mix, not drawn apartments.'};
 }
 export function compareOptions(result,objective='population'){
   const value=o=>objective==='population'?o.metrics.estimatedResidents:objective==='openSpace'?o.metrics.unbuiltSiteSf:objective==='target'?-Math.abs(o.metrics.targetDifference):o.metrics.grossMassingFloorAreaSf;
@@ -134,7 +141,7 @@ export function compareOptions(result,objective='population'){
   return [...result.options].sort((a,b)=>value(b)-value(a)||a.typology.localeCompare(b.typology)).map((o,i)=>({rank:i+1,id:o.id,typology:o.typology,metrics:o.metrics}));
 }
 export function planSvg(result,option){
-  const p=result.parcel.boundary,all=p.flat(),xs=p.map(q=>q[0]),ys=p.map(q=>q[1]),minX=Math.min(...xs),minY=Math.min(...ys),w=Math.max(...xs)-minX,h=Math.max(...ys)-minY;
+  const p=result.parcel.boundary,xs=p.map(q=>q[0]),ys=p.map(q=>q[1]),minX=Math.min(...xs),minY=Math.min(...ys),w=Math.max(...xs)-minX,h=Math.max(...ys)-minY;
   const scale=Math.min(680/w,480/h),xy=q=>[60+(q[0]-minX)*scale,90+(h-(q[1]-minY))*scale].map(round).join(',');
   const poly=(a,fill,stroke,dash='')=>a.length?'<polygon points="'+a.map(xy).join(' ')+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.5" '+(dash?'stroke-dasharray="'+dash+'"':'')+'/>':'';
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 650" width="800" height="650"><rect width="800" height="650" fill="#fff"/><g font-family="Arial,sans-serif" fill="#142820"><text x="60" y="35" font-size="20">MEMO STUDIO / CITY MAKER</text><text x="60" y="59" font-size="13">'+option.typology.toUpperCase()+' / CONCEPT MASSING · '+option.metrics.floors+' FLOORS</text>'+poly(p,'#f2f4ef','#233b30')+poly(result.parcel.buildableBoundary,'none','#a39875','6 4')+option.blocks.map(b=>poly(b.polygon,'#729785','#28473a')).join('')+'<text x="60" y="597" font-size="13">Homes (estimate): '+option.metrics.homes+' · Residents (estimate): '+option.metrics.estimatedResidents+' · FAR (massing): '+round(option.metrics.FAR)+'</text><text x="60" y="623" font-size="11">Local feet · schematic footprints · not surveyed or approved</text></g></svg>';
