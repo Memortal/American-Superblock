@@ -10,7 +10,7 @@
     "start": "node server.mjs",
     "start:http": "node server.mjs --http",
     "test": "node --test smoke.test.mjs",
-    "test:fast": "node --test --test-name-pattern='portable V3|variant validation|MCP handshake|V4 geometry|V5 deterministic|V6|HTTP release' smoke.test.mjs"
+    "test:fast": "node --test --test-name-pattern='portable V3|variant validation|V4 geometry|V5 deterministic|V6|HTTP release' smoke.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
