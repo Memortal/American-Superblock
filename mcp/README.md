@@ -68,6 +68,21 @@ Version export files are temporary (one hour maximum, two retained files per pro
 
 Run TEST_V3=1 npm test for actual browser revision comparison and JSON export checks; TEST_V2=1 enables the V2 image checks. GET /health and get_project report the MCP release version (health also reports tool count); health does not establish browser readiness.
 
+## V4: architectural analysis and candidate optimization
+
+All six tools consume actual browser JSON exports, using the baseline cache or rebuilding requested parameters in an isolated browser.
+
+- `analyze_daylight`: approximate vertical facade glazing area and model-axis orientation distribution; unshaded two-sided directional projection only, no geographic sun path, occlusion or illuminance simulation.
+- `check_clashes`: bounded AABB screening of distinct exported geometry groups, with positive overlap tolerance; false positives and expected joints possible. Partial screens and missing geometry are explicitly marked. Not exact solid clashes.
+- `analyze_egress`: exposes invalidated route status for the V section. Does not claim travel distances or compliance.
+- `analyze_structure`: inventory of modeled columns, beams, members and slabs, including loft parts and unresolved engineering issues; not load analysis.
+- `analyze_efficiency`: actual undeformed base-plan residential program, homes, density, average area; net-to-gross remains unavailable, and program/site ratio is not FAR.
+- `optimize_design`: evaluate two or three explicit candidates using real model exports and rank by weighted normalized housing count, residential program area and low V shift. Returns Pareto flags and failed candidates; not a global optimization or a code-compliance assessment.
+
+Example optimization input: {"candidates":[{},{"setback":20,"runPerStorey":3}],"weights":{"homes":3,"area":2,"lowShift":1}}. Analysis is read-only. No shared edits, third-party climate data, certification or cost estimates. Render Free capacity and client timeouts may limit browser operations.
+
+Run TEST_V4=1 npm test for live model analysis tests, including bounded candidate optimization. Synthetic analysis formula tests run by default.
+
 ## Remote endpoint
 
 GitHub Pages cannot run this server. Build a Docker image from the repository root:
