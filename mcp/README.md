@@ -126,6 +126,14 @@ Run `npm run test:fast` for the geometry, study-token, City Maker and actual loc
 
 The live `/health` response and `get_project` report the release from package.json; health also reports tool count, browser queue occupancy, whether the baseline export has been requested, and the Render deployment commit if available. Health is process liveness, not proof of model readiness. After merging to main, verify the Render service uses that commit, has completed deployment, and returns version 0.6.1 with 35 tools. Then verify the MCP tools/list result and a real model operation. A stale connector tool catalog may need refreshing.
 
+## Release 0.6.2: IFC export validation and live testing
+
+The previous uniform 256 MiB limit rejected the full-model IFC export in integration testing. The actual size was not logged. JSON remains limited to 256 MiB; IFC defaults to 768 MiB and can be configured with IFC_MAX_MIB (256–1024 inclusive). Both default and variant IFC exports use a common validation helper: report actual byte counts, reject empty or oversized files, verify IFC4 STEP header and end marker with bounded reads, remove failed artifacts, and retain at most one variant file when exporting IFC. This does not prove full IFC schema or geometry validity, and it does not remove Chromium memory constraints. Large files can exceed free-instance memory, storage or network limits; do not raise the limit beyond host capacity.
+
+Run `node mcp/test-live.mjs` from repository root (Node 22+, no dependencies) after deploying 0.6.2. Add `--browser` for real BIM generation, drawings, efficiency and study evaluation; add `--ifc` for the large IFC test. The latter includes browser tests and verifies download length with HEAD, without transferring the whole file. Open the returned download URL and inspect the IFC with a compatible viewer for manual validation. Default tests do not start Chromium. The script accepts an optional server origin argument for local or alternate deployments.
+
+Refresh the custom MCP client's discovered tools after a deployment; in MCP Inspector use Streamable HTTP and the public /mcp URL. A browser GET on /mcp is intentionally not supported.
+
 ## Remote endpoint
 
 GitHub Pages cannot run this server. Build a Docker image from the repository root:

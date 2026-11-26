@@ -9,6 +9,7 @@ import { registerVersionTools, lookupDesignExport } from './design-versions.mjs'
 import { registerAnalysisTools } from './analysis.mjs';
 import { registerStudyTools } from './design-study.mjs';
 import { registerCityTools, lookupCityExport } from './city-maker.mjs';
+import { downloadModelExport, exportLimit } from './export-validation.mjs';
 import { readFile, mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -16,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../app/public/', import.meta.url));
 const httpMode = process.argv.includes('--http');
+exportLimit('ifc'); // Reject invalid size configuration at startup.
 const release = JSON.parse(await readFile(new URL('./package.json',import.meta.url),'utf8')).version;
 const publicBase = (process.env.PUBLIC_BASE_URL || process.env.RENDER_EXTERNAL_URL)?.replace(/\/$/, '');
 if (publicBase && !/^https:\/\/[^/]+$/.test(publicBase)) throw new Error('PUBLIC_BASE_URL must be an HTTPS origin');
@@ -63,14 +65,9 @@ async function runBrowser(operation) {
 async function capture(format) {
   return withBrowser(async page=>{
     const cfg = formats[format];
-    const downloadPromise = page.waitForEvent('download', { timeout: 120000 });
-    await page.evaluate(id => document.getElementById(id).click(), cfg.button);
-    const download = await downloadPromise;
-    const file = join(workdir, cfg.file);
-    await download.saveAs(file);
-    const info = await stat(file);
-    if (!info.size || info.size > 256 * 1024 * 1024) throw new Error('Unexpected export size');
-    return file;
+    const file=join(workdir,cfg.file);
+    try{await downloadModelExport(page,file,format);return file;}
+    catch(e){await rm(file,{force:true}).catch(()=>{});throw e;}
   });
 }
 async function snapshot() {
@@ -89,7 +86,7 @@ async function getIfc() {
 const result = value => ({ content: [{ type: 'text', text: JSON.stringify(value) }] });
 const safe = fn => async args => {
   try { return result(await fn(args)); }
-  catch (e) { console.error('MCP tool failed:', e.message); return { isError: true, content: [{ type:'text', text:'Model export or query failed. Check the server logs and browser dependencies.' }] }; }
+  catch (e) { console.error('MCP tool failed:', e.message); return { isError: true, content: [{ type:'text', text:'Model export or query failed. '+(/^(IFC|JSON) export size |^Incomplete or unexpected IFC4 STEP export/.test(e.message)?e.message:'Check server logs and browser resources.') }] }; }
 };
 const readOnly = { readOnlyHint:true, destructiveHint:false, idempotentHint:true, openWorldHint:false };
 const textFilter = z.string().max(100).optional();
@@ -149,7 +146,7 @@ if (httpMode) {
     if(bind==='127.0.0.1'&&!['127.0.0.1','localhost'].includes(req.hostname))return res.status(403).send('Host not allowed');
     next();
   });
-  app.get('/health',(_req,res)=>res.json({status:'ok',model:'lazy-loaded',mcpVersion:release,toolCount:35,browserJobs,browserQueueCapacity:2,baselineExportRequested:!!snapshotPromise,revision:process.env.RENDER_GIT_COMMIT||null}));
+  app.get('/health',(_req,res)=>res.json({status:'ok',model:'lazy-loaded',mcpVersion:release,toolCount:35,browserJobs,browserQueueCapacity:2,ifcMaxBytes:exportLimit('ifc'),baselineExportRequested:!!snapshotPromise,revision:process.env.RENDER_GIT_COMMIT||null}));
   app.get('/artifacts/:format',async(req,res)=>{
     const f=req.params.format;
     if(!Object.hasOwn(formats,f))return res.sendStatus(404);
