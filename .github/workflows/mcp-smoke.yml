@@ -6,7 +6,7 @@ on:
       - 'app/public/**'
       - '.github/workflows/mcp-smoke.yml'
   push:
-    branches: [main, feat/american-superblock-mcp]
+    branches: [main]
     paths:
       - 'mcp/**'
       - 'app/public/**'
@@ -15,9 +15,10 @@ on:
 permissions:
   contents: read
 jobs:
-  smoke:
+  fast:
+    name: Protocol and geometry checks (no Chromium)
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: mcp
@@ -27,12 +28,29 @@ jobs:
         with:
           node-version: '22'
       - run: npm install
-      - run: node --check server.mjs
-      - run: node --check architecture.mjs
+      - run: for f in *.mjs; do node --check "$f" || exit 1; done
+      - run: npm run test:fast
       - run: npm audit --audit-level=high
         continue-on-error: true
+  browser:
+    name: Actual Superblock browser integration
+    needs: fast
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    defaults:
+      run:
+        working-directory: mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
       - run: npx playwright install --with-deps chromium
       - run: npm test
         env:
           TEST_IFC: '1'
           TEST_V2: '1'
+          TEST_V3: '1'
+          TEST_V4: '1'
+          TEST_V5: '1'

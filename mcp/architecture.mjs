@@ -25,7 +25,7 @@ export function describeParameters() {
     stepFloors:{min:1,max:3,step:1,unit:'storeys',description:'Inner V-section step interval'}
   }};
 }
-async function apply(page,p) {
+export async function applyParameters(page,p) {
   await page.evaluate(p=>{
     const change=(id,value)=>{const el=document.getElementById(id);if(!el)throw Error('Missing control '+id);if(el.type==='checkbox')el.checked=value;else el.value=String(value);el.dispatchEvent(new Event('change',{bubbles:true}));};
     if(p.setback!==18){change('lockGeometry',false);change('setback',p.setback);}
@@ -64,7 +64,7 @@ export function registerArchitectureTools(server,{withBrowser,publicBase,httpMod
     catch(e){console.error('Architecture tool:',name,e.message);return {isError:true,content:[text({error:'Architecture operation failed. Verify requested parameters or server browser resources.',caveat})]};}
   });
   add('get_parameters','List supported real browser design parameters, defaults, units and bounds.',{},async()=>[text(describeParameters())]);
-  const variant=async(input,operation)=>{const p=normalizeParameters(input);return withBrowser(async page=>{await apply(page,p);return operation(page,p);});};
+  const variant=async(input,operation)=>{const p=normalizeParameters(input);return withBrowser(async page=>{await applyParameters(page,p);return operation(page,p);});};
   async function renderView(page,{building,view,lod,shadows,cut}){
     await page.evaluate(({building,view,lod,shadows,cut})=>{
       const change=(id,value)=>{const el=document.getElementById(id);if(el.type==='checkbox')el.checked=value;else el.value=value;el.dispatchEvent(new Event('change',{bubbles:true}));};
